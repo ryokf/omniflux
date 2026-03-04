@@ -1,15 +1,14 @@
 mod config;
 mod models;
+mod controllers;
+mod routes;
 
-use axum::{ Router, routing::{ get } };
 use dotenvy::dotenv;
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    let app = Router::new()
-        .route("/", get("Welcome to OmniFlux API"))
-        .with_state(config::db::db_state().await);
+    let app = routes::create_router().await;
     let listener = tokio::net::TcpListener::bind("0.0.0.0:4000").await.unwrap();
 
     println!("server running on http://localhost:4000");
