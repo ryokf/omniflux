@@ -19,87 +19,56 @@ export default function DashboardScreen() {
     const recentTx = TRANSACTIONS.slice(0, 5);
     const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
 
+    const barColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
+
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <SafeAreaView className="flex-1 bg-bg">
             <ScrollView
-                style={{ flex: 1 }}
+                className="flex-1"
                 contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <View className="flex-row justify-between items-center mb-6">
                     <View>
-                        <Text style={{ color: Colors.textSecondary, fontSize: 14 }}>Selamat datang 👋</Text>
-                        <Text style={{ color: Colors.textPrimary, fontSize: 22, fontWeight: '800', marginTop: 2 }}>
+                        <Text className="text-txt-secondary text-sm">Selamat datang 👋</Text>
+                        <Text className="text-txt text-[22px] font-extrabold mt-0.5">
                             {USER_PROFILE.name}
                         </Text>
                     </View>
-                    <View
-                        style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 14,
-                            backgroundColor: Colors.primary + '30',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Text style={{ fontSize: 20 }}>👤</Text>
+                    <View className="w-11 h-11 rounded-[14px] bg-primary/30 justify-center items-center">
+                        <Text className="text-xl">👤</Text>
                     </View>
                 </View>
 
                 {/* Net Worth Card */}
-                <Card
-                    style={{
-                        marginBottom: 20,
-                        borderColor: Colors.primary + '40',
-                    }}
-                >
-                    <Text style={{ color: Colors.textSecondary, fontSize: 13, fontWeight: '500' }}>
+                <Card className="mb-5 border-primary/40">
+                    <Text className="text-txt-secondary text-[13px] font-medium">
                         Total Kekayaan Bersih
                     </Text>
-                    <Text
-                        style={{
-                            color: Colors.textPrimary,
-                            fontSize: 32,
-                            fontWeight: '800',
-                            marginTop: 6,
-                            letterSpacing: 0.5,
-                        }}
-                    >
+                    <Text className="text-txt text-[32px] font-extrabold mt-1.5 tracking-wide">
                         {formatRupiah(netWorth)}
                     </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                        <View
-                            style={{
-                                backgroundColor: Colors.profit + '20',
-                                paddingHorizontal: 10,
-                                paddingVertical: 4,
-                                borderRadius: 8,
-                            }}
-                        >
-                            <Text style={{ color: Colors.profit, fontSize: 13, fontWeight: '700' }}>
-                                ▲ 3.2% bulan ini
-                            </Text>
+                    <View className="flex-row items-center mt-2">
+                        <View className="bg-profit/20 px-2.5 py-1 rounded-lg">
+                            <Text className="text-profit text-[13px] font-bold">▲ 3.2% bulan ini</Text>
                         </View>
                     </View>
                 </Card>
 
                 {/* Wallets */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 12 }}>
-                    Sumber Dana
-                </Text>
+                <Text className="text-txt text-[17px] font-bold mb-3">Sumber Dana</Text>
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
-                    style={{ marginBottom: 24 }}
+                    className="mb-6"
                     contentContainerStyle={{ gap: 12 }}
                 >
                     {WALLETS.map(wallet => (
-                        <Card key={wallet.id} style={{ width: 160 }} elevated>
-                            <Text style={{ fontSize: 24, marginBottom: 8 }}>{wallet.icon}</Text>
-                            <Text style={{ color: Colors.textSecondary, fontSize: 12 }}>{wallet.name}</Text>
-                            <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginTop: 4 }}>
+                        <Card key={wallet.id} elevated style={{ width: 160 }}>
+                            <Text className="text-2xl mb-2">{wallet.icon}</Text>
+                            <Text className="text-txt-secondary text-xs">{wallet.name}</Text>
+                            <Text className="text-txt text-[17px] font-bold mt-1">
                                 {formatRupiah(wallet.balance)}
                             </Text>
                         </Card>
@@ -107,26 +76,22 @@ export default function DashboardScreen() {
                 </ScrollView>
 
                 {/* Expense Breakdown */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 12 }}>
-                    Ringkasan Pengeluaran
-                </Text>
-                <Card style={{ marginBottom: 24 }}>
+                <Text className="text-txt text-[17px] font-bold mb-3">Ringkasan Pengeluaran</Text>
+                <Card className="mb-6">
                     {expenses.map((cat, i) => {
                         const pct = totalExpense > 0 ? (cat.total / totalExpense) * 100 : 0;
-                        const barColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
                         const barColor = barColors[i % barColors.length];
                         return (
-                            <View key={cat.name} style={{ marginBottom: i < expenses.length - 1 ? 14 : 0 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-                                    <Text style={{ color: Colors.textPrimary, fontSize: 14, fontWeight: '500' }}>{cat.name}</Text>
-                                    <Text style={{ color: Colors.textSecondary, fontSize: 13 }}>{formatRupiah(cat.total)}</Text>
+                            <View key={cat.name} className={i < expenses.length - 1 ? 'mb-3.5' : ''}>
+                                <View className="flex-row justify-between mb-1.5">
+                                    <Text className="text-txt text-sm font-medium">{cat.name}</Text>
+                                    <Text className="text-txt-secondary text-[13px]">{formatRupiah(cat.total)}</Text>
                                 </View>
-                                <View style={{ height: 6, backgroundColor: Colors.surfaceElevated, borderRadius: 3 }}>
+                                <View className="h-1.5 bg-surface-el rounded-full">
                                     <View
+                                        className="h-1.5 rounded-full"
                                         style={{
-                                            height: 6,
                                             backgroundColor: barColor,
-                                            borderRadius: 3,
                                             width: `${Math.min(pct, 100)}%`,
                                         }}
                                     />
@@ -137,9 +102,7 @@ export default function DashboardScreen() {
                 </Card>
 
                 {/* Recent Transactions */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 4 }}>
-                    Transaksi Terakhir
-                </Text>
+                <Text className="text-txt text-[17px] font-bold mb-1">Transaksi Terakhir</Text>
                 <Card>
                     {recentTx.map(tx => (
                         <TransactionItem

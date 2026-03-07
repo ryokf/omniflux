@@ -27,60 +27,37 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+    <SafeAreaView className="flex-1 bg-bg">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 28 }}
+        className="flex-1 justify-center px-7"
       >
         {/* Logo / Brand */}
-        <View style={{ alignItems: 'center', marginBottom: 48 }}>
+        <View className="items-center mb-12">
           <View
+            className="w-[72px] h-[72px] rounded-2xl bg-primary justify-center items-center mb-4"
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 20,
-              backgroundColor: Colors.primary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 16,
               shadowColor: Colors.primary,
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.4,
               shadowRadius: 16,
             }}
           >
-            <Text style={{ fontSize: 32, color: Colors.white, fontWeight: '800' }}>O</Text>
+            <Text className="text-[32px] text-white font-extrabold">O</Text>
           </View>
-          <Text
-            style={{
-              fontSize: 28,
-              fontWeight: '800',
-              color: Colors.textPrimary,
-              letterSpacing: 1,
-            }}
-          >
+          <Text className="text-[28px] font-extrabold text-txt tracking-wide">
             OmniFlux
           </Text>
-          <Text style={{ color: Colors.textSecondary, fontSize: 14, marginTop: 6 }}>
+          <Text className="text-txt-secondary text-sm mt-1.5">
             Assets Aggregator
           </Text>
         </View>
 
         {/* Form */}
-        <View style={{ marginBottom: 24 }}>
-          <Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8, fontWeight: '500' }}>
-            Email
-          </Text>
+        <View className="mb-6">
+          <Text className="text-txt-secondary text-[13px] mb-2 font-medium">Email</Text>
           <TextInput
-            style={{
-              backgroundColor: Colors.inputBg,
-              borderRadius: 12,
-              padding: 16,
-              color: Colors.textPrimary,
-              fontSize: 16,
-              borderWidth: 1,
-              borderColor: Colors.surfaceBorder,
-            }}
+            className="bg-input-bg rounded-xl p-4 text-txt text-base border border-surface-border"
             placeholder="andi@omniflux.id"
             placeholderTextColor={Colors.textMuted}
             keyboardType="email-address"
@@ -90,20 +67,10 @@ export default function LoginScreen() {
           />
         </View>
 
-        <View style={{ marginBottom: 32 }}>
-          <Text style={{ color: Colors.textSecondary, fontSize: 13, marginBottom: 8, fontWeight: '500' }}>
-            Kata Sandi
-          </Text>
+        <View className="mb-8">
+          <Text className="text-txt-secondary text-[13px] mb-2 font-medium">Kata Sandi</Text>
           <TextInput
-            style={{
-              backgroundColor: Colors.inputBg,
-              borderRadius: 12,
-              padding: 16,
-              color: Colors.textPrimary,
-              fontSize: 16,
-              borderWidth: 1,
-              borderColor: Colors.surfaceBorder,
-            }}
+            className="bg-input-bg rounded-xl p-4 text-txt text-base border border-surface-border"
             placeholder="••••••••"
             placeholderTextColor={Colors.textMuted}
             secureTextEntry
@@ -117,11 +84,8 @@ export default function LoginScreen() {
           onPress={handleLogin}
           activeOpacity={0.85}
           disabled={loading}
+          className="bg-primary rounded-[14px] py-[17px] items-center"
           style={{
-            backgroundColor: Colors.primary,
-            borderRadius: 14,
-            paddingVertical: 17,
-            alignItems: 'center',
             shadowColor: Colors.primary,
             shadowOffset: { width: 0, height: 6 },
             shadowOpacity: 0.35,
@@ -132,19 +96,15 @@ export default function LoginScreen() {
           {loading ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text style={{ color: Colors.white, fontSize: 17, fontWeight: '700' }}>
-              Masuk
-            </Text>
+            <Text className="text-white text-[17px] font-bold">Masuk</Text>
           )}
         </TouchableOpacity>
 
         {/* Register Link */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 24 }}>
-          <Text style={{ color: Colors.textSecondary, fontSize: 14 }}>Belum punya akun? </Text>
+        <View className="flex-row justify-center mt-6">
+          <Text className="text-txt-secondary text-sm">Belum punya akun? </Text>
           <TouchableOpacity>
-            <Text style={{ color: Colors.primary, fontSize: 14, fontWeight: '600' }}>
-              Daftar
-            </Text>
+            <Text className="text-primary text-sm font-semibold">Daftar</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

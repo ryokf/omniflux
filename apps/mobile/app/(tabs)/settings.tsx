@@ -13,7 +13,6 @@ interface SettingRow {
     icon: IoniconsName;
     label: string;
     subtitle?: string;
-    color?: string;
     isDestructive?: boolean;
 }
 
@@ -52,75 +51,44 @@ export default function SettingsScreen() {
     };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <SafeAreaView className="flex-1 bg-bg">
             <ScrollView
-                style={{ flex: 1 }}
+                className="flex-1"
                 contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 20 }}>
-                    Pengaturan
-                </Text>
+                <Text className="text-txt text-2xl font-extrabold mb-5">Pengaturan</Text>
 
-                {/* User Profile Card */}
-                <Card style={{ marginBottom: 24, borderColor: Colors.primary + '40' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <View
-                            style={{
-                                width: 56,
-                                height: 56,
-                                borderRadius: 16,
-                                backgroundColor: Colors.primary + '30',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginRight: 14,
-                            }}
-                        >
-                            <Text style={{ fontSize: 26 }}>👤</Text>
+                <Card className="mb-6 border-primary/40">
+                    <View className="flex-row items-center">
+                        <View className="w-14 h-14 rounded-2xl bg-primary/30 justify-center items-center mr-3.5">
+                            <Text className="text-[26px]">👤</Text>
                         </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={{ color: Colors.textPrimary, fontSize: 18, fontWeight: '700' }}>
-                                {USER_PROFILE.name}
-                            </Text>
-                            <Text style={{ color: Colors.textSecondary, fontSize: 13, marginTop: 2 }}>
-                                {USER_PROFILE.email}
-                            </Text>
+                        <View className="flex-1">
+                            <Text className="text-txt text-lg font-bold">{USER_PROFILE.name}</Text>
+                            <Text className="text-txt-secondary text-[13px] mt-0.5">{USER_PROFILE.email}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={Colors.textMuted} />
                     </View>
                 </Card>
 
-                {/* Settings Sections */}
                 {SETTINGS_SECTIONS.map(section => (
-                    <View key={section.title} style={{ marginBottom: 24 }}>
-                        <Text style={{ color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginBottom: 10, marginLeft: 4 }}>
+                    <View key={section.title} className="mb-6">
+                        <Text className="text-txt-secondary text-[13px] font-semibold mb-2.5 ml-1">
                             {section.title.toUpperCase()}
                         </Text>
-                        <Card style={{ padding: 0, overflow: 'hidden' }}>
+                        <Card className="p-0 overflow-hidden">
                             {section.items.map((item, idx) => (
                                 <TouchableOpacity
                                     key={item.label}
                                     activeOpacity={0.6}
                                     onPress={item.isDestructive ? handleLogout : undefined}
-                                    style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        padding: 16,
-                                        borderBottomWidth: idx < section.items.length - 1 ? 1 : 0,
-                                        borderBottomColor: Colors.divider,
-                                    }}
+                                    className={`flex-row items-center p-4 ${idx < section.items.length - 1 ? 'border-b border-divider' : ''
+                                        }`}
                                 >
                                     <View
-                                        style={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: 10,
-                                            backgroundColor: item.isDestructive ? Colors.loss + '18' : Colors.surfaceElevated,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            marginRight: 12,
-                                        }}
+                                        className={`w-9 h-9 rounded-[10px] justify-center items-center mr-3 ${item.isDestructive ? 'bg-loss/20' : 'bg-surface-el'
+                                            }`}
                                     >
                                         <Ionicons
                                             name={item.icon}
@@ -128,20 +96,15 @@ export default function SettingsScreen() {
                                             color={item.isDestructive ? Colors.loss : Colors.textSecondary}
                                         />
                                     </View>
-                                    <View style={{ flex: 1 }}>
+                                    <View className="flex-1">
                                         <Text
-                                            style={{
-                                                color: item.isDestructive ? Colors.loss : Colors.textPrimary,
-                                                fontSize: 15,
-                                                fontWeight: '500',
-                                            }}
+                                            className={`text-[15px] font-medium ${item.isDestructive ? 'text-loss' : 'text-txt'
+                                                }`}
                                         >
                                             {item.label}
                                         </Text>
                                         {item.subtitle && (
-                                            <Text style={{ color: Colors.textMuted, fontSize: 12, marginTop: 2 }}>
-                                                {item.subtitle}
-                                            </Text>
+                                            <Text className="text-txt-muted text-xs mt-0.5">{item.subtitle}</Text>
                                         )}
                                     </View>
                                     {!item.isDestructive && (

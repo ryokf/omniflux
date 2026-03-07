@@ -6,6 +6,7 @@ import { Colors } from '@/src/constants/colors';
 import { Card } from '@/src/components/Card';
 import { TransactionItem } from '@/src/components/TransactionItem';
 import { ManualInputModal } from '@/src/components/ManualInputModal';
+import { AIConfirmModal } from '@/src/components/AIConfirmModal';
 import {
     TRANSACTIONS,
     getExpenseByCategory,
@@ -16,51 +17,43 @@ export default function TransactionsScreen() {
     const [inputText, setInputText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [showManual, setShowManual] = useState(false);
+    const [showAIConfirm, setShowAIConfirm] = useState(false);
+    const [pendingInput, setPendingInput] = useState('');
     const expenses = getExpenseByCategory();
     const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
 
     const handleSend = () => {
         if (!inputText.trim()) return;
-        setIsProcessing(true);
-        setTimeout(() => {
-            setIsProcessing(false);
-            setInputText('');
-        }, 2000);
+        // Store the input, open AI confirmation modal
+        setPendingInput(inputText.trim());
+        setInputText('');
+        setShowAIConfirm(true);
     };
 
-    // Donut segments
-    const colors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
+    const handleAIConfirm = () => {
+        // In real app: POST to backend, update transactions list
+        setShowAIConfirm(false);
+        setPendingInput('');
+    };
+
+    const legendColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <SafeAreaView className="flex-1 bg-bg">
             <ScrollView
-                style={{ flex: 1 }}
+                className="flex-1"
                 contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 20 }}>
-                    Transaksi
-                </Text>
+                <Text className="text-txt text-2xl font-extrabold mb-5">Transaksi</Text>
 
                 {/* Smart Input */}
-                <Card style={{ marginBottom: 24, borderColor: Colors.primary + '40' }}>
-                    <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 10 }}>
-                        ✨ AI Smart Input
-                    </Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Card className="mb-3 border-primary/40">
+                    <Text className="text-txt-secondary text-xs font-semibold mb-2.5">✨ AI Smart Input</Text>
+                    <View className="flex-row items-center">
                         <TextInput
-                            style={{
-                                flex: 1,
-                                backgroundColor: Colors.inputBg,
-                                borderRadius: 12,
-                                padding: 14,
-                                paddingRight: 48,
-                                color: Colors.textPrimary,
-                                fontSize: 15,
-                                borderWidth: 1,
-                                borderColor: Colors.surfaceBorder,
-                            }}
+                            className="flex-1 bg-input-bg rounded-xl p-3.5 pr-12 text-txt text-[15px] border border-surface-border"
                             placeholder='Cth: "Bayar WiFi 300rb"'
                             placeholderTextColor={Colors.textMuted}
                             value={inputText}
@@ -69,95 +62,45 @@ export default function TransactionsScreen() {
                         />
                         <TouchableOpacity
                             onPress={handleSend}
-                            style={{
-                                position: 'absolute',
-                                right: 6,
-                                width: 38,
-                                height: 38,
-                                borderRadius: 10,
-                                backgroundColor: Colors.primary,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                            }}
+                            className="absolute right-1.5 w-[38px] h-[38px] rounded-[10px] bg-primary justify-center items-center"
                         >
-                            {isProcessing ? (
-                                <ActivityIndicator color={Colors.white} size="small" />
-                            ) : (
-                                <Ionicons name="send" size={16} color={Colors.white} />
-                            )}
+                            <Ionicons name="send" size={16} color={Colors.white} />
                         </TouchableOpacity>
                     </View>
-                    {isProcessing && (
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 10 }}>
-                            <ActivityIndicator color={Colors.primary} size="small" />
-                            <Text style={{ color: Colors.primary, fontSize: 12, marginLeft: 8 }}>
-                                Menganalisis dengan AI...
-                            </Text>
-                        </View>
-                    )}
+                    <Text className="text-txt-muted text-[11px] mt-2">
+                        Ketik transaksi dalam bahasa sehari-hari, AI akan mengekstrak datanya
+                    </Text>
                 </Card>
 
                 {/* Manual Input Button */}
                 <TouchableOpacity
                     onPress={() => setShowManual(true)}
                     activeOpacity={0.7}
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: Colors.surfaceElevated,
-                        borderRadius: 12,
-                        paddingVertical: 12,
-                        marginBottom: 24,
-                        borderWidth: 1,
-                        borderColor: Colors.surfaceBorder,
-                        borderStyle: 'dashed',
-                    }}
+                    className="flex-row items-center justify-center bg-surface-el rounded-xl py-3 mb-6 border border-dashed border-surface-border"
                 >
                     <Ionicons name="create-outline" size={16} color={Colors.textSecondary} />
-                    <Text style={{ color: Colors.textSecondary, fontSize: 13, fontWeight: '600', marginLeft: 6 }}>
+                    <Text className="text-txt-secondary text-[13px] font-semibold ml-1.5">
                         ✏️ Input Manual / Form Standar
                     </Text>
                 </TouchableOpacity>
 
-                {/* Category Chart (Simplified visual) */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 12 }}>
-                    Proporsi Pengeluaran
-                </Text>
-                <Card style={{ marginBottom: 24, alignItems: 'center' }}>
-                    {/* Visual Donut Representation */}
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
-                        <View
-                            style={{
-                                width: 100,
-                                height: 100,
-                                borderRadius: 50,
-                                borderWidth: 12,
-                                borderColor: Colors.primary,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                marginRight: 20,
-                            }}
-                        >
-                            <Text style={{ color: Colors.textPrimary, fontSize: 14, fontWeight: '700' }}>
-                                {formatRupiah(totalExpense)}
-                            </Text>
-                            <Text style={{ color: Colors.textSecondary, fontSize: 10 }}>Total</Text>
+                {/* Category Chart */}
+                <Text className="text-txt text-[17px] font-bold mb-3">Proporsi Pengeluaran</Text>
+                <Card className="mb-6 items-center">
+                    <View className="mb-4">
+                        <View className="w-[180px] h-[180px] rounded-full border-[14px] border-primary justify-center items-center mr-5">
+                            <Text className="text-txt text-lg font-bold">{formatRupiah(totalExpense)}</Text>
+                            <Text className="text-txt-secondary">Total</Text>
                         </View>
-                        <View style={{ flex: 1 }}>
+                        <View className="mt-4">
                             {expenses.slice(0, 4).map((cat, i) => (
-                                <View key={cat.name} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                <View key={cat.name} className="flex-row items-center mb-2">
                                     <View
-                                        style={{
-                                            width: 10,
-                                            height: 10,
-                                            borderRadius: 3,
-                                            backgroundColor: colors[i % colors.length],
-                                            marginRight: 8,
-                                        }}
+                                        className="w-2.5 h-2.5 rounded-sm mr-2"
+                                        style={{ backgroundColor: legendColors[i % legendColors.length] }}
                                     />
-                                    <Text style={{ color: Colors.textSecondary, fontSize: 12, flex: 1 }}>{cat.name}</Text>
-                                    <Text style={{ color: Colors.textPrimary, fontSize: 12, fontWeight: '600' }}>
+                                    <Text className="text-txt-secondary flex-1">{cat.name}</Text>
+                                    <Text className="text-txt font-semibold">
                                         {((cat.total / totalExpense) * 100).toFixed(0)}%
                                     </Text>
                                 </View>
@@ -167,13 +110,9 @@ export default function TransactionsScreen() {
                 </Card>
 
                 {/* Transaction History */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700' }}>
-                        Riwayat Transaksi
-                    </Text>
-                    <Text style={{ color: Colors.primary, fontSize: 13, fontWeight: '600' }}>
-                        {TRANSACTIONS.length} transaksi
-                    </Text>
+                <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-txt text-[17px] font-bold">Riwayat Transaksi</Text>
+                    <Text className="text-primary text-[13px] font-semibold">{TRANSACTIONS.length} transaksi</Text>
                 </View>
                 <Card>
                     {TRANSACTIONS.map(tx => (
@@ -189,9 +128,12 @@ export default function TransactionsScreen() {
                 </Card>
             </ScrollView>
 
-            <ManualInputModal
-                visible={showManual}
-                onClose={() => setShowManual(false)}
+            <ManualInputModal visible={showManual} onClose={() => setShowManual(false)} />
+            <AIConfirmModal
+                visible={showAIConfirm}
+                rawInput={pendingInput}
+                onClose={() => { setShowAIConfirm(false); setPendingInput(''); }}
+                onConfirm={handleAIConfirm}
             />
         </SafeAreaView>
     );

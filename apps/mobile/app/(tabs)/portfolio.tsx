@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/src/constants/colors';
 import { Card } from '@/src/components/Card';
 import { AssetCard } from '@/src/components/AssetCard';
 import {
@@ -17,53 +16,36 @@ export default function PortfolioScreen() {
     const investTotal = PORTFOLIO_ASSETS.reduce((s, a) => s + a.totalValue, 0);
 
     const assetTypes = ['Crypto', 'Stock', 'Mutual Fund'] as const;
+    const typeLabels: Record<string, string> = {
+        Crypto: '₿ Kripto',
+        Stock: '📊 Saham',
+        'Mutual Fund': '📦 Reksa Dana',
+    };
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <SafeAreaView className="flex-1 bg-bg">
             <ScrollView
-                style={{ flex: 1 }}
+                className="flex-1"
                 contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
-                <Text style={{ color: Colors.textPrimary, fontSize: 24, fontWeight: '800', marginBottom: 20 }}>
-                    Portofolio
-                </Text>
+                <Text className="text-txt text-2xl font-extrabold mb-5">Portofolio</Text>
 
                 {/* Net Worth */}
-                <Card style={{ marginBottom: 20, borderColor: Colors.primary + '40' }}>
-                    <Text style={{ color: Colors.textSecondary, fontSize: 13 }}>Net Worth</Text>
-                    <Text style={{ color: Colors.textPrimary, fontSize: 30, fontWeight: '800', marginTop: 4 }}>
-                        {formatRupiah(netWorth)}
-                    </Text>
+                <Card className="mb-5 border-primary/40">
+                    <Text className="text-txt-secondary text-[13px]">Net Worth</Text>
+                    <Text className="text-txt text-[30px] font-extrabold mt-1">{formatRupiah(netWorth)}</Text>
 
                     {/* Breakdown */}
-                    <View style={{ flexDirection: 'row', marginTop: 16, gap: 12 }}>
-                        <View
-                            style={{
-                                flex: 1,
-                                backgroundColor: Colors.surfaceElevated,
-                                borderRadius: 12,
-                                padding: 12,
-                            }}
-                        >
-                            <Text style={{ color: Colors.textSecondary, fontSize: 11 }}>💵 Kas</Text>
-                            <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginTop: 4 }}>
-                                {formatRupiah(cashTotal)}
-                            </Text>
+                    <View className="flex-row mt-4 gap-3">
+                        <View className="flex-1 bg-surface-el rounded-xl p-3">
+                            <Text className="text-txt-secondary text-[11px]">💵 Kas</Text>
+                            <Text className="text-txt text-base font-bold mt-1">{formatRupiah(cashTotal)}</Text>
                         </View>
-                        <View
-                            style={{
-                                flex: 1,
-                                backgroundColor: Colors.surfaceElevated,
-                                borderRadius: 12,
-                                padding: 12,
-                            }}
-                        >
-                            <Text style={{ color: Colors.textSecondary, fontSize: 11 }}>📊 Investasi</Text>
-                            <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: '700', marginTop: 4 }}>
-                                {formatRupiah(investTotal)}
-                            </Text>
+                        <View className="flex-1 bg-surface-el rounded-xl p-3">
+                            <Text className="text-txt-secondary text-[11px]">📊 Investasi</Text>
+                            <Text className="text-txt text-base font-bold mt-1">{formatRupiah(investTotal)}</Text>
                         </View>
                     </View>
                 </Card>
@@ -72,22 +54,11 @@ export default function PortfolioScreen() {
                 {assetTypes.map(type => {
                     const assets = PORTFOLIO_ASSETS.filter(a => a.assetType === type);
                     if (assets.length === 0) return null;
-
-                    const typeLabels: Record<string, string> = {
-                        Crypto: '₿ Kripto',
-                        Stock: '📊 Saham',
-                        'Mutual Fund': '📦 Reksa Dana',
-                    };
-
                     return (
-                        <View key={type} style={{ marginBottom: 20 }}>
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                                <Text style={{ color: Colors.textPrimary, fontSize: 17, fontWeight: '700' }}>
-                                    {typeLabels[type]}
-                                </Text>
-                                <Text style={{ color: Colors.textSecondary, fontSize: 13 }}>
-                                    {assets.length} aset
-                                </Text>
+                        <View key={type} className="mb-5">
+                            <View className="flex-row justify-between items-center mb-3">
+                                <Text className="text-txt text-[17px] font-bold">{typeLabels[type]}</Text>
+                                <Text className="text-txt-secondary text-[13px]">{assets.length} aset</Text>
                             </View>
                             {assets.map(asset => (
                                 <AssetCard

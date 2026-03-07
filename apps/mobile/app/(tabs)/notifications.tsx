@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/src/constants/colors';
 import { NotificationItem } from '@/src/components/NotificationItem';
 import { INSIGHTS } from '@/src/constants/dummy-data';
 
@@ -9,58 +8,33 @@ export default function NotificationsScreen() {
     const unreadCount = INSIGHTS.filter(i => !i.isRead).length;
 
     return (
-        <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+        <SafeAreaView className="flex-1 bg-bg">
             <ScrollView
-                style={{ flex: 1 }}
+                className="flex-1"
                 contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                    <Text style={{ color: Colors.textPrimary, fontSize: 24, fontWeight: '800' }}>
-                        Notifikasi
-                    </Text>
+                <View className="flex-row justify-between items-center mb-5">
+                    <Text className="text-txt text-2xl font-extrabold">Notifikasi</Text>
                     {unreadCount > 0 && (
-                        <View
-                            style={{
-                                backgroundColor: Colors.warning + '25',
-                                paddingHorizontal: 12,
-                                paddingVertical: 5,
-                                borderRadius: 20,
-                            }}
-                        >
-                            <Text style={{ color: Colors.warning, fontSize: 12, fontWeight: '700' }}>
-                                {unreadCount} baru
-                            </Text>
+                        <View className="bg-warning/25 px-3 py-1.5 rounded-full">
+                            <Text className="text-warning text-xs font-bold">{unreadCount} baru</Text>
                         </View>
                     )}
                 </View>
 
-                {/* AI Insights Info */}
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        backgroundColor: Colors.primary + '15',
-                        borderRadius: 12,
-                        padding: 14,
-                        marginBottom: 20,
-                        borderWidth: 1,
-                        borderColor: Colors.primary + '30',
-                    }}
-                >
-                    <Text style={{ fontSize: 20, marginRight: 10 }}>🤖</Text>
-                    <View style={{ flex: 1 }}>
-                        <Text style={{ color: Colors.primaryLight, fontSize: 13, fontWeight: '600' }}>
+                <View className="flex-row items-center bg-primary/15 rounded-xl p-3.5 mb-5 border border-primary/30">
+                    <Text className="text-xl mr-2.5">🤖</Text>
+                    <View className="flex-1">
+                        <Text className="text-primary-light text-[13px] font-semibold">
                             AI Behavioral Analytics
                         </Text>
-                        <Text style={{ color: Colors.textSecondary, fontSize: 12, marginTop: 2 }}>
+                        <Text className="text-txt-secondary text-xs mt-0.5">
                             Saran proaktif berdasarkan pola keuangan Anda
                         </Text>
                     </View>
                 </View>
 
-                {/* Notification Items */}
                 {INSIGHTS.map(insight => (
                     <NotificationItem
                         key={insight.id}

@@ -22,7 +22,6 @@ interface ManualInputModalProps {
 type Tab = 'cashflow' | 'investment';
 type TxType = 'buy' | 'sell';
 
-// Custom Dropdown
 function Dropdown({
     label,
     options,
@@ -38,25 +37,15 @@ function Dropdown({
     const selectedOption = options.find(o => o.value === selected);
 
     return (
-        <View style={{ marginBottom: 16 }}>
-            <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
-                {label}
-            </Text>
+        <View className="mb-4">
+            <Text className="text-txt-secondary text-xs font-semibold mb-1.5">{label}</Text>
             <TouchableOpacity
                 onPress={() => setOpen(!open)}
                 activeOpacity={0.7}
-                style={{
-                    backgroundColor: Colors.inputBg,
-                    borderRadius: 12,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: open ? Colors.primary + '60' : Colors.surfaceBorder,
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                }}
+                className={`bg-input-bg rounded-xl p-3.5 border flex-row justify-between items-center ${open ? 'border-primary/60' : 'border-surface-border'
+                    }`}
             >
-                <Text style={{ color: selectedOption ? Colors.textPrimary : Colors.textMuted, fontSize: 15 }}>
+                <Text className={`text-[15px] ${selectedOption ? 'text-txt' : 'text-txt-muted'}`}>
                     {selectedOption?.label ?? 'Pilih...'}
                 </Text>
                 <Ionicons
@@ -66,16 +55,7 @@ function Dropdown({
                 />
             </TouchableOpacity>
             {open && (
-                <View
-                    style={{
-                        backgroundColor: Colors.surfaceElevated,
-                        borderRadius: 12,
-                        marginTop: 4,
-                        borderWidth: 1,
-                        borderColor: Colors.surfaceBorder,
-                        overflow: 'hidden',
-                    }}
-                >
+                <View className="bg-surface-el rounded-xl mt-1 border border-surface-border overflow-hidden">
                     {options.map((opt, idx) => (
                         <TouchableOpacity
                             key={opt.value}
@@ -83,19 +63,12 @@ function Dropdown({
                                 onSelect(opt.value);
                                 setOpen(false);
                             }}
-                            style={{
-                                padding: 14,
-                                borderBottomWidth: idx < options.length - 1 ? 1 : 0,
-                                borderBottomColor: Colors.divider,
-                                backgroundColor: opt.value === selected ? Colors.primary + '15' : 'transparent',
-                            }}
+                            className={`p-3.5 ${idx < options.length - 1 ? 'border-b border-divider' : ''} ${opt.value === selected ? 'bg-primary/15' : ''
+                                }`}
                         >
                             <Text
-                                style={{
-                                    color: opt.value === selected ? Colors.primaryLight : Colors.textPrimary,
-                                    fontSize: 14,
-                                    fontWeight: opt.value === selected ? '600' : '400',
-                                }}
+                                className={`text-sm ${opt.value === selected ? 'text-primary-light font-semibold' : 'text-txt'
+                                    }`}
                             >
                                 {opt.label}
                             </Text>
@@ -107,7 +80,6 @@ function Dropdown({
     );
 }
 
-// Toggle button for Buy/Sell
 function ToggleButton({
     value,
     onChange,
@@ -116,57 +88,24 @@ function ToggleButton({
     onChange: (v: TxType) => void;
 }) {
     return (
-        <View style={{ marginBottom: 16 }}>
-            <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
-                Tipe Transaksi
-            </Text>
-            <View
-                style={{
-                    flexDirection: 'row',
-                    backgroundColor: Colors.inputBg,
-                    borderRadius: 12,
-                    padding: 4,
-                    borderWidth: 1,
-                    borderColor: Colors.surfaceBorder,
-                }}
-            >
+        <View className="mb-4">
+            <Text className="text-txt-secondary text-xs font-semibold mb-1.5">Tipe Transaksi</Text>
+            <View className="flex-row bg-input-bg rounded-xl p-1 border border-surface-border">
                 <TouchableOpacity
                     onPress={() => onChange('buy')}
-                    style={{
-                        flex: 1,
-                        paddingVertical: 11,
-                        borderRadius: 9,
-                        backgroundColor: value === 'buy' ? Colors.profit + '25' : 'transparent',
-                        alignItems: 'center',
-                    }}
+                    className={`flex-1 py-2.5 rounded-[9px] items-center ${value === 'buy' ? 'bg-profit/25' : ''
+                        }`}
                 >
-                    <Text
-                        style={{
-                            color: value === 'buy' ? Colors.profit : Colors.textMuted,
-                            fontWeight: '700',
-                            fontSize: 14,
-                        }}
-                    >
+                    <Text className={`font-bold text-sm ${value === 'buy' ? 'text-profit' : 'text-txt-muted'}`}>
                         🟢 Beli
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => onChange('sell')}
-                    style={{
-                        flex: 1,
-                        paddingVertical: 11,
-                        borderRadius: 9,
-                        backgroundColor: value === 'sell' ? Colors.loss + '25' : 'transparent',
-                        alignItems: 'center',
-                    }}
+                    className={`flex-1 py-2.5 rounded-[9px] items-center ${value === 'sell' ? 'bg-loss/25' : ''
+                        }`}
                 >
-                    <Text
-                        style={{
-                            color: value === 'sell' ? Colors.loss : Colors.textMuted,
-                            fontWeight: '700',
-                            fontSize: 14,
-                        }}
-                    >
+                    <Text className={`font-bold text-sm ${value === 'sell' ? 'text-loss' : 'text-txt-muted'}`}>
                         🔴 Jual
                     </Text>
                 </TouchableOpacity>
@@ -178,13 +117,11 @@ function ToggleButton({
 export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     const [activeTab, setActiveTab] = useState<Tab>('cashflow');
 
-    // -- Arus Kas state --
     const [cfWallet, setCfWallet] = useState('');
     const [cfCategory, setCfCategory] = useState('');
     const [cfAmount, setCfAmount] = useState('');
     const [cfNote, setCfNote] = useState('');
 
-    // -- Investasi state --
     const [invType, setInvType] = useState<TxType>('buy');
     const [invAssetType, setInvAssetType] = useState('');
     const [invSymbol, setInvSymbol] = useState('');
@@ -211,149 +148,63 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     };
 
     const handleSave = () => {
-        // Prototype — just close
         resetForm();
         onClose();
     };
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent
-            onRequestClose={onClose}
-        >
-            <Pressable
-                style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)' }}
-                onPress={onClose}
-            />
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+            <Pressable className="flex-1 bg-black/55" onPress={onClose} />
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-                style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    backgroundColor: Colors.surface,
-                    borderTopLeftRadius: 24,
-                    borderTopRightRadius: 24,
-                    maxHeight: '88%',
-                }}
+                className="absolute bottom-0 left-0 right-0 bg-surface rounded-t-3xl max-h-[88%]"
             >
-                {/* Handle */}
-                <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
-                    <View
-                        style={{
-                            width: 40,
-                            height: 4,
-                            borderRadius: 2,
-                            backgroundColor: Colors.textMuted,
-                        }}
-                    />
+                <View className="items-center pt-3 pb-1">
+                    <View className="w-10 h-1 rounded-sm bg-txt-muted" />
                 </View>
 
-                {/* Header */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 }}>
-                    <Text style={{ color: Colors.textPrimary, fontSize: 20, fontWeight: '800' }}>
-                        Input Manual
-                    </Text>
+                <View className="flex-row justify-between items-center px-5 pt-2 pb-3">
+                    <Text className="text-txt text-xl font-extrabold">Input Manual</Text>
                     <TouchableOpacity onPress={onClose}>
                         <Ionicons name="close-circle" size={28} color={Colors.textMuted} />
                     </TouchableOpacity>
                 </View>
 
-                {/* Tabs */}
-                <View
-                    style={{
-                        flexDirection: 'row',
-                        marginHorizontal: 20,
-                        backgroundColor: Colors.inputBg,
-                        borderRadius: 12,
-                        padding: 4,
-                        marginBottom: 20,
-                        borderWidth: 1,
-                        borderColor: Colors.surfaceBorder,
-                    }}
-                >
+                <View className="flex-row mx-5 bg-input-bg rounded-xl p-1 mb-5 border border-surface-border">
                     <TouchableOpacity
                         onPress={() => setActiveTab('cashflow')}
-                        style={{
-                            flex: 1,
-                            paddingVertical: 10,
-                            borderRadius: 9,
-                            backgroundColor: activeTab === 'cashflow' ? Colors.primary : 'transparent',
-                            alignItems: 'center',
-                        }}
+                        className={`flex-1 py-2.5 rounded-[9px] items-center ${activeTab === 'cashflow' ? 'bg-primary' : ''
+                            }`}
                     >
-                        <Text
-                            style={{
-                                color: activeTab === 'cashflow' ? Colors.white : Colors.textSecondary,
-                                fontWeight: '700',
-                                fontSize: 13,
-                            }}
-                        >
+                        <Text className={`font-bold text-[13px] ${activeTab === 'cashflow' ? 'text-white' : 'text-txt-secondary'}`}>
                             💸 Arus Kas
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={() => setActiveTab('investment')}
-                        style={{
-                            flex: 1,
-                            paddingVertical: 10,
-                            borderRadius: 9,
-                            backgroundColor: activeTab === 'investment' ? Colors.primary : 'transparent',
-                            alignItems: 'center',
-                        }}
+                        className={`flex-1 py-2.5 rounded-[9px] items-center ${activeTab === 'investment' ? 'bg-primary' : ''
+                            }`}
                     >
-                        <Text
-                            style={{
-                                color: activeTab === 'investment' ? Colors.white : Colors.textSecondary,
-                                fontWeight: '700',
-                                fontSize: 13,
-                            }}
-                        >
+                        <Text className={`font-bold text-[13px] ${activeTab === 'investment' ? 'text-white' : 'text-txt-secondary'}`}>
                             📈 Investasi
                         </Text>
                     </TouchableOpacity>
                 </View>
 
                 <ScrollView
-                    style={{ paddingHorizontal: 20 }}
+                    className="px-5"
                     contentContainerStyle={{ paddingBottom: 40 }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
                     {activeTab === 'cashflow' ? (
-                        /* ============ ARUS KAS FORM ============ */
                         <>
-                            <Dropdown
-                                label="Dompet"
-                                options={walletOptions}
-                                selected={cfWallet}
-                                onSelect={setCfWallet}
-                            />
-                            <Dropdown
-                                label="Kategori"
-                                options={categoryOptions}
-                                selected={cfCategory}
-                                onSelect={setCfCategory}
-                            />
-
-                            {/* Amount */}
-                            <View style={{ marginBottom: 16 }}>
-                                <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
-                                    Nominal (Rp)
-                                </Text>
+                            <Dropdown label="Dompet" options={walletOptions} selected={cfWallet} onSelect={setCfWallet} />
+                            <Dropdown label="Kategori" options={categoryOptions} selected={cfCategory} onSelect={setCfCategory} />
+                            <View className="mb-4">
+                                <Text className="text-txt-secondary text-xs font-semibold mb-1.5">Nominal (Rp)</Text>
                                 <TextInput
-                                    style={{
-                                        backgroundColor: Colors.inputBg,
-                                        borderRadius: 12,
-                                        padding: 14,
-                                        color: Colors.textPrimary,
-                                        fontSize: 15,
-                                        borderWidth: 1,
-                                        borderColor: Colors.surfaceBorder,
-                                    }}
+                                    className="bg-input-bg rounded-xl p-3.5 text-txt text-[15px] border border-surface-border"
                                     placeholder="0"
                                     placeholderTextColor={Colors.textMuted}
                                     keyboardType="numeric"
@@ -361,22 +212,10 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                                     onChangeText={setCfAmount}
                                 />
                             </View>
-
-                            {/* Note */}
-                            <View style={{ marginBottom: 20 }}>
-                                <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
-                                    Catatan
-                                </Text>
+                            <View className="mb-5">
+                                <Text className="text-txt-secondary text-xs font-semibold mb-1.5">Catatan</Text>
                                 <TextInput
-                                    style={{
-                                        backgroundColor: Colors.inputBg,
-                                        borderRadius: 12,
-                                        padding: 14,
-                                        color: Colors.textPrimary,
-                                        fontSize: 15,
-                                        borderWidth: 1,
-                                        borderColor: Colors.surfaceBorder,
-                                    }}
+                                    className="bg-input-bg rounded-xl p-3.5 text-txt text-[15px] border border-surface-border"
                                     placeholder="Deskripsi singkat..."
                                     placeholderTextColor={Colors.textMuted}
                                     value={cfNote}
@@ -385,44 +224,21 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                             </View>
                         </>
                     ) : (
-                        /* ============ INVESTASI FORM ============ */
                         <>
                             <ToggleButton value={invType} onChange={setInvType} />
-
                             <Dropdown
                                 label="Jenis Aset"
                                 options={assetTypeOptions}
                                 selected={invAssetType}
-                                onSelect={(v) => {
-                                    setInvAssetType(v);
-                                    setInvSymbol('');  // reset symbol on type change
-                                }}
+                                onSelect={(v) => { setInvAssetType(v); setInvSymbol(''); }}
                             />
-
                             {invAssetType !== '' && (
-                                <Dropdown
-                                    label="Simbol Aset"
-                                    options={symbolOptions}
-                                    selected={invSymbol}
-                                    onSelect={setInvSymbol}
-                                />
+                                <Dropdown label="Simbol Aset" options={symbolOptions} selected={invSymbol} onSelect={setInvSymbol} />
                             )}
-
-                            {/* Quantity */}
-                            <View style={{ marginBottom: 16 }}>
-                                <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
-                                    Jumlah (Lot / Koin)
-                                </Text>
+                            <View className="mb-4">
+                                <Text className="text-txt-secondary text-xs font-semibold mb-1.5">Jumlah (Lot / Koin)</Text>
                                 <TextInput
-                                    style={{
-                                        backgroundColor: Colors.inputBg,
-                                        borderRadius: 12,
-                                        padding: 14,
-                                        color: Colors.textPrimary,
-                                        fontSize: 15,
-                                        borderWidth: 1,
-                                        borderColor: Colors.surfaceBorder,
-                                    }}
+                                    className="bg-input-bg rounded-xl p-3.5 text-txt text-[15px] border border-surface-border"
                                     placeholder="0"
                                     placeholderTextColor={Colors.textMuted}
                                     keyboardType="numeric"
@@ -430,22 +246,12 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                                     onChangeText={setInvQty}
                                 />
                             </View>
-
-                            {/* Price */}
-                            <View style={{ marginBottom: 16 }}>
-                                <Text style={{ color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginBottom: 6 }}>
+                            <View className="mb-4">
+                                <Text className="text-txt-secondary text-xs font-semibold mb-1.5">
                                     Harga {invType === 'buy' ? 'Beli' : 'Jual'} (Rp)
                                 </Text>
                                 <TextInput
-                                    style={{
-                                        backgroundColor: Colors.inputBg,
-                                        borderRadius: 12,
-                                        padding: 14,
-                                        color: Colors.textPrimary,
-                                        fontSize: 15,
-                                        borderWidth: 1,
-                                        borderColor: Colors.surfaceBorder,
-                                    }}
+                                    className="bg-input-bg rounded-xl p-3.5 text-txt text-[15px] border border-surface-border"
                                     placeholder="0"
                                     placeholderTextColor={Colors.textMuted}
                                     keyboardType="numeric"
@@ -453,34 +259,23 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                                     onChangeText={setInvPrice}
                                 />
                             </View>
-
-                            <Dropdown
-                                label="Sumber Dana"
-                                options={walletOptions}
-                                selected={invWallet}
-                                onSelect={setInvWallet}
-                            />
+                            <Dropdown label="Sumber Dana" options={walletOptions} selected={invWallet} onSelect={setInvWallet} />
                         </>
                     )}
 
-                    {/* Save Button */}
                     <TouchableOpacity
                         onPress={handleSave}
                         activeOpacity={0.85}
+                        className="bg-primary rounded-[14px] py-4 items-center mt-1"
                         style={{
-                            backgroundColor: Colors.primary,
-                            borderRadius: 14,
-                            paddingVertical: 16,
-                            alignItems: 'center',
                             shadowColor: Colors.primary,
                             shadowOffset: { width: 0, height: 6 },
                             shadowOpacity: 0.35,
                             shadowRadius: 12,
                             elevation: 8,
-                            marginTop: 4,
                         }}
                     >
-                        <Text style={{ color: Colors.white, fontSize: 16, fontWeight: '700' }}>
+                        <Text className="text-white text-base font-bold">
                             {activeTab === 'cashflow' ? '💾 Simpan Transaksi' : `💾 Simpan ${invType === 'buy' ? 'Pembelian' : 'Penjualan'}`}
                         </Text>
                     </TouchableOpacity>

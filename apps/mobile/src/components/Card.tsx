@@ -1,26 +1,21 @@
 import React from 'react';
-import { View, Text, ViewStyle } from 'react-native';
-import { Colors } from '@/src/constants/colors';
+import { View, ViewStyle } from 'react-native';
 
 interface CardProps {
     children: React.ReactNode;
     style?: ViewStyle;
     elevated?: boolean;
+    className?: string;
 }
 
-export function Card({ children, style, elevated = false }: CardProps) {
+export function Card({ children, style, elevated = false, className = '' }: CardProps) {
     return (
         <View
-            style={[
-                {
-                    backgroundColor: elevated ? Colors.surfaceElevated : Colors.surface,
-                    borderRadius: 16,
-                    padding: 16,
-                    borderWidth: 1,
-                    borderColor: Colors.surfaceBorder,
-                },
-                style,
-            ]}
+            className={`rounded-2xl p-4 border ${elevated
+                    ? 'bg-surface-el border-surface-border'
+                    : 'bg-surface border-surface-border'
+                } ${className}`}
+            style={style}
         >
             {children}
         </View>

@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Colors } from '@/src/constants/colors';
 import { formatRupiah } from '@/src/constants/dummy-data';
 
 interface AssetCardProps {
@@ -27,81 +26,36 @@ export function AssetCard({
     return (
         <TouchableOpacity
             activeOpacity={0.7}
-            style={{
-                backgroundColor: Colors.surface,
-                borderRadius: 16,
-                padding: 16,
-                borderWidth: 1,
-                borderColor: Colors.surfaceBorder,
-                marginBottom: 12,
-            }}
+            className="bg-surface rounded-2xl p-4 border border-surface-border mb-3"
         >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View className="flex-row items-center">
                 {/* Icon */}
-                <View
-                    style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: 14,
-                        backgroundColor: Colors.surfaceElevated,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        marginRight: 14,
-                    }}
-                >
-                    <Text style={{ fontSize: 22 }}>{icon}</Text>
+                <View className="w-12 h-12 rounded-[14px] bg-surface-el justify-center items-center mr-3.5">
+                    <Text className="text-[22px]">{icon}</Text>
                 </View>
 
                 {/* Info */}
-                <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <Text style={{ color: Colors.textPrimary, fontSize: 16, fontWeight: '700' }}>
-                            {tickerSymbol}
-                        </Text>
-                        <View
-                            style={{
-                                marginLeft: 8,
-                                backgroundColor: Colors.primary + '20',
-                                paddingHorizontal: 8,
-                                paddingVertical: 2,
-                                borderRadius: 6,
-                            }}
-                        >
-                            <Text style={{ color: Colors.primaryLight, fontSize: 10, fontWeight: '600' }}>
-                                {assetType}
-                            </Text>
+                <View className="flex-1">
+                    <View className="flex-row items-center">
+                        <Text className="text-txt text-base font-bold">{tickerSymbol}</Text>
+                        <View className="ml-2 bg-primary/20 px-2 py-0.5 rounded-md">
+                            <Text className="text-primary-light text-[10px] font-semibold">{assetType}</Text>
                         </View>
                     </View>
-                    <Text
-                        style={{ color: Colors.textSecondary, fontSize: 13, marginTop: 2 }}
-                        numberOfLines={1}
-                    >
+                    <Text className="text-txt-secondary text-[13px] mt-0.5" numberOfLines={1}>
                         {name}
                     </Text>
                 </View>
 
                 {/* Value & PnL */}
-                <View style={{ alignItems: 'flex-end' }}>
-                    <Text style={{ color: Colors.textPrimary, fontSize: 15, fontWeight: '600' }}>
-                        {formatRupiah(totalValue)}
-                    </Text>
+                <View className="items-end">
+                    <Text className="text-txt text-[15px] font-semibold">{formatRupiah(totalValue)}</Text>
                     <View
-                        style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            marginTop: 3,
-                            backgroundColor: (isProfit ? Colors.profit : Colors.loss) + '18',
-                            paddingHorizontal: 7,
-                            paddingVertical: 2,
-                            borderRadius: 6,
-                        }}
+                        className={`flex-row items-center mt-1 px-1.5 py-0.5 rounded-md ${isProfit ? 'bg-profit/10' : 'bg-loss/10'
+                            }`}
                     >
                         <Text
-                            style={{
-                                color: isProfit ? Colors.profit : Colors.loss,
-                                fontSize: 12,
-                                fontWeight: '700',
-                            }}
+                            className={`text-xs font-bold ${isProfit ? 'text-profit' : 'text-loss'}`}
                         >
                             {isProfit ? '▲' : '▼'} {Math.abs(pnlPercent).toFixed(2)}%
                         </Text>

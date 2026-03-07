@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Colors } from '@/src/constants/colors';
 
 interface NotificationItemProps {
     type: string;
@@ -9,70 +8,63 @@ interface NotificationItemProps {
     createdAt: string;
 }
 
-const TYPE_CONFIG: Record<string, { label: string; color: string; icon: string }> = {
-    budget_alert: { label: 'Peringatan', color: Colors.warning, icon: '⚠️' },
-    investment_opportunity: { label: 'Peluang Investasi', color: Colors.primary, icon: '💡' },
-    savings_milestone: { label: 'Pencapaian', color: Colors.profit, icon: '🏆' },
+const TYPE_CONFIG: Record<string, { label: string; colorClass: string; bgClass: string; borderClass: string; icon: string }> = {
+    budget_alert: {
+        label: 'Peringatan',
+        colorClass: 'text-warning',
+        bgClass: 'bg-warning/20',
+        borderClass: 'border-warning/40',
+        icon: '⚠️',
+    },
+    investment_opportunity: {
+        label: 'Peluang Investasi',
+        colorClass: 'text-primary',
+        bgClass: 'bg-primary/20',
+        borderClass: 'border-primary/40',
+        icon: '💡',
+    },
+    savings_milestone: {
+        label: 'Pencapaian',
+        colorClass: 'text-profit',
+        bgClass: 'bg-profit/20',
+        borderClass: 'border-profit/40',
+        icon: '🏆',
+    },
 };
 
 export function NotificationItem({ type, message, isRead, createdAt }: NotificationItemProps) {
-    const config = TYPE_CONFIG[type] ?? { label: 'Info', color: Colors.textSecondary, icon: 'ℹ️' };
+    const config = TYPE_CONFIG[type] ?? {
+        label: 'Info',
+        colorClass: 'text-txt-secondary',
+        bgClass: 'bg-txt-secondary/20',
+        borderClass: 'border-txt-secondary/40',
+        icon: 'ℹ️',
+    };
     const timeAgo = getTimeAgo(createdAt);
 
     return (
         <View
-            style={{
-                flexDirection: 'row',
-                padding: 16,
-                backgroundColor: isRead ? Colors.surface : Colors.surfaceElevated,
-                borderRadius: 14,
-                marginBottom: 10,
-                borderWidth: 1,
-                borderColor: isRead ? Colors.surfaceBorder : config.color + '40',
-            }}
+            className={`flex-row p-4 rounded-[14px] mb-2.5 border ${isRead
+                    ? 'bg-surface border-surface-border'
+                    : `bg-surface-el ${config.borderClass}`
+                }`}
         >
             {/* Icon */}
-            <View
-                style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 12,
-                    backgroundColor: config.color + '20',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    marginRight: 12,
-                }}
-            >
-                <Text style={{ fontSize: 18 }}>{config.icon}</Text>
+            <View className={`w-[42px] h-[42px] rounded-xl ${config.bgClass} justify-center items-center mr-3`}>
+                <Text className="text-lg">{config.icon}</Text>
             </View>
 
             {/* Content */}
-            <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                    <Text style={{ color: config.color, fontSize: 12, fontWeight: '700' }}>
-                        {config.label}
-                    </Text>
+            <View className="flex-1">
+                <View className="flex-row items-center mb-1">
+                    <Text className={`text-xs font-bold ${config.colorClass}`}>{config.label}</Text>
                     {!isRead && (
-                        <View
-                            style={{
-                                width: 7,
-                                height: 7,
-                                borderRadius: 4,
-                                backgroundColor: Colors.primary,
-                                marginLeft: 8,
-                            }}
-                        />
+                        <View className="w-[7px] h-[7px] rounded-full bg-primary ml-2" />
                     )}
-                    <Text style={{ color: Colors.textMuted, fontSize: 11, marginLeft: 'auto' }}>
-                        {timeAgo}
-                    </Text>
+                    <Text className="text-txt-muted text-[11px] ml-auto">{timeAgo}</Text>
                 </View>
                 <Text
-                    style={{
-                        color: isRead ? Colors.textSecondary : Colors.textPrimary,
-                        fontSize: 14,
-                        lineHeight: 20,
-                    }}
+                    className={`text-sm leading-5 ${isRead ? 'text-txt-secondary' : 'text-txt'}`}
                 >
                     {message}
                 </Text>
