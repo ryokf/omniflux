@@ -1,5 +1,8 @@
 use axum::{ Json, extract::State, http::StatusCode };
-use crate::{ dto::user_dto::{ CreateUserDto, UserLoginDto }, models::user::Model as User };
+use crate::{
+    dto::user_dto::{ AuthResponseDto, CreateUserDto, UserLoginDto },
+    models::user::Model as User,
+};
 
 use crate::config::db::AppState;
 
@@ -19,10 +22,9 @@ pub async fn register(
 pub async fn login(
     State(state): State<AppState>,
     Json(request): Json<UserLoginDto>
-) -> Result<Json<User>, (StatusCode, String)> {
+) -> Result<Json<AuthResponseDto>, (StatusCode, String)> {
     match crate::services::user_service::login(request, State(state)).await {
-        Ok(Some(user)) => Ok(Json(user)),
-        Ok(None) => Err((StatusCode::NOT_FOUND, "User not found".to_string())),
+        Ok(token) => Ok(Json(token)),
         Err(e) => {
             let message = format!("Failed to login : {}", e);
             Err((StatusCode::INTERNAL_SERVER_ERROR, message))
