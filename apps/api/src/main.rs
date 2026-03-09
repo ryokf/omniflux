@@ -4,6 +4,7 @@ mod controllers;
 mod services;
 mod routes;
 mod dto;
+mod middleware;
 
 use dotenvy::dotenv;
 

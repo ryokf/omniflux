@@ -2,7 +2,7 @@ use axum::{ Json, extract::{ Path, State }, http::StatusCode };
 
 use crate::{
     config::db::AppState,
-    dto::wallet_dto::CreateWalletDto,
+    dto::{ user_dto::Jwt, wallet_dto::CreateWalletDto },
     models::wallet::Model as Wallet,
     services::wallet_service,
 };
@@ -22,7 +22,8 @@ pub async fn get_wallet_by_user_id(
 
 pub async fn create_wallet(
     State(state): State<AppState>,
-    Json(request): Json<CreateWalletDto>
+    Json(request): Json<CreateWalletDto>,
+    jwt: Jwt
 ) -> Result<Json<Wallet>, (StatusCode, String)> {
     match wallet_service::create_wallet(request, State(state)).await {
         Ok(wallet) => Ok(Json(wallet)),
