@@ -1,37 +1,52 @@
-use axum::{ extract::FromRequestParts, http::{ request::Parts, StatusCode } };
+use axum::{
+    extract::FromRequestParts,
+    http::{ request::Parts, StatusCode, header::AUTHORIZATION },
+    Json, // 1. Tambahkan import Json dari axum
+};
 use jsonwebtoken::{ decode, DecodingKey, Validation };
+use serde_json::json; // 2. Tambahkan import macro json! dari serde_json
 use crate::dto::user_dto::Jwt;
 
 impl<S> FromRequestParts<S> for Jwt where S: Send + Sync {
-    // KITA SEDERHANAKAN: Langsung gunakan StatusCode jika gagal, tidak perlu buat enum error
-    type Rejection = StatusCode;
+    // 3. PERBAIKAN: Ubah Rejection menjadi tuple berisi StatusCode dan Json
+    type Rejection = (StatusCode, Json<serde_json::Value>);
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        // 1. Coba ambil tulisan di header "Authorization"
+        // 4. Cek header dan kembalikan pesan error dalam bentuk JSON
         let auth_header = parts.headers
-            .get("Authorization")
+            .get(AUTHORIZATION)
             .and_then(|value| value.to_str().ok())
-            .ok_or(StatusCode::UNAUTHORIZED)?; // Jika header tidak ada, langsung tolak (401)
+            .ok_or((
+                StatusCode::UNAUTHORIZED,
+                Json(json!({ "message": "Akses ditolak: Header Authorization tidak ditemukan" })),
+            ))?;
 
-        // 2. Cek apakah awalan teksnya adalah "Bearer "
+        // 5. Cek format Bearer
         if !auth_header.starts_with("Bearer ") {
-            return Err(StatusCode::UNAUTHORIZED);
+            return Err((
+                StatusCode::UNAUTHORIZED,
+                Json(json!({ "message": "Akses ditolak: Format token harus 'Bearer <token>'" })),
+            ));
         }
 
-        // 3. Buang kata "Bearer " untuk mengambil kode tokennya saja
         let token = auth_header.trim_start_matches("Bearer ");
+        let secret = "rahasia123";
 
-        // 4. Siapkan kunci rahasia (HARUS SAMA dengan yang di fitur login)
-        let secret = "KUNCI_RAHASIA_SUPER_AMAN";
-
-        // 5. Coba bongkar (decode) tokennya
+        // 6. Validasi token dan kembalikan error JSON jika gagal
         let token_data = decode::<Jwt>(
             token,
             &DecodingKey::from_secret(secret.as_ref()),
             &Validation::default()
-        ).map_err(|_| StatusCode::UNAUTHORIZED)?; // Jika token palsu atau kedaluwarsa, tolak (401)
+        ).map_err(|e| {
+            eprintln!("JWT Error: {:?}", e);
+            (
+                StatusCode::UNAUTHORIZED,
+                Json(
+                    json!({ "message": "Akses ditolak: Token tidak valid atau sudah kedaluwarsa" })
+                ),
+            )
+        })?;
 
-        // 6. Berhasil! Kembalikan data Jwt (berisi ID user) ke controller
         Ok(token_data.claims)
     }
 }

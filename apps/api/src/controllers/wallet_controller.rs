@@ -22,8 +22,8 @@ pub async fn get_wallet_by_user_id(
 
 pub async fn create_wallet(
     State(state): State<AppState>,
-    Json(request): Json<CreateWalletDto>,
-    jwt: Jwt
+    jwt: Jwt,
+    Json(request): Json<CreateWalletDto>
 ) -> Result<Json<Wallet>, (StatusCode, String)> {
     match wallet_service::create_wallet(request, State(state)).await {
         Ok(wallet) => Ok(Json(wallet)),
