@@ -1,12 +1,17 @@
+use crate::utils::usd_to_idr_convert::usd_to_idr_convert;
+
 pub async fn get_latest_price(ticker: &str) -> Result<f64, Box<dyn std::error::Error>> {
     let provider = yahoo_finance_api::YahooConnector::new()?;
 
-    // Meminta data quote terbaru dengan rentang waktu 1 hari ("1d")
     let response = provider.get_latest_quotes(ticker, "1d").await?;
 
-    // Mengekstrak quote terakhir dari respons Yahoo
     let quote = response.last_quote()?;
 
-    // Mengembalikan harga penutupan (close)
+    // Mendapatkan 2 karakter terakhir dari ticker
+    let last_two = if ticker.len() >= 2 { &ticker[ticker.len() - 2..] } else { ticker };
+
+    if last_two != "JK" {
+        return Ok(usd_to_idr_convert(quote.close).await?);
+    }
     Ok(quote.close)
 }
