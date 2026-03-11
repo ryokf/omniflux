@@ -108,6 +108,7 @@ impl MigrationTrait for Migration {
                             "Crypto",
                             "Mutual Fund",
                             "Commodity",
+                            "Fiat",
                         ])
                         .not_null()
                 )

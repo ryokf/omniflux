@@ -109,6 +109,7 @@ dependencies = [
  "csv",
  "dotenvy",
  "jsonwebtoken",
+ "rust_decimal",
  "sea-orm",
  "serde",
  "serde_json",
