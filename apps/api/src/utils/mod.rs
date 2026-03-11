@@ -3,3 +3,4 @@ pub mod crypto_seeder;
 pub mod gold_seeder;
 pub mod usd_to_idr_convert;
 pub mod usd_seeder;
+pub mod user_seeder;

@@ -42,7 +42,7 @@ pub async fn idx_stock_seeder() -> Result<(), Box<dyn Error>> {
             name: Set(record.nama_perusahaan),
             asset_type: Set(AssetType::Stock),
             current_price: Set(Decimal::new(0, 0)),
-            unit: Set("Lot".to_string()),
+            unit: Set("Lembar".to_string()),
             last_update: Set(Some(Utc::now())),
             ..Default::default()
         };

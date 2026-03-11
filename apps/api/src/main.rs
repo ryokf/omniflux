@@ -12,6 +12,7 @@ use crate::utils::idx_stock_seeder::idx_stock_seeder;
 use crate::utils::crypto_seeder::crypto_seeder;
 use crate::utils::gold_seeder::gold_seeder;
 use crate::utils::usd_seeder::usd_seeder;
+use crate::utils::user_seeder::user_seeder;
 
 #[tokio::main]
 async fn main() {
@@ -31,6 +32,10 @@ async fn main() {
 
     if let Err(e) = usd_seeder().await {
         eprintln!("Gagal melakukan seeding usd: {}", e);
+    }
+
+    if let Err(e) = user_seeder().await {
+        eprintln!("Gagal melakukan seeding user default: {}", e);
     }
 
     let app = routes::create_router().await;
