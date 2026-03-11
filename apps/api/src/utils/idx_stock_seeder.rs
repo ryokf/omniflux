@@ -1,7 +1,8 @@
 use crate::{ config::db, models::{ asset, sea_orm_active_enums::AssetType } };
-use sea_orm::{ EntityTrait, PaginatorTrait, Set };
+use sea_orm::{ EntityTrait, PaginatorTrait, Set, prelude::Decimal };
 use serde::Deserialize;
 use std::error::Error;
+use chrono::Utc;
 
 // Struct ini menyesuaikan dengan nama kolom persis yang ada di CSV Anda
 #[derive(Debug, Deserialize)]
@@ -39,8 +40,10 @@ pub async fn idx_stock_seeder() -> Result<(), Box<dyn Error>> {
         let active_model = asset::ActiveModel {
             ticker_symbol: Set(ticker),
             name: Set(record.nama_perusahaan),
-            // Sesuaikan nama varian ini dengan yang Anda definisikan di sea_orm_active_enums
             asset_type: Set(AssetType::Stock),
+            current_price: Set(Decimal::new(0, 0)),
+            unit: Set("Lot".to_string()),
+            last_update: Set(Some(Utc::now())),
             ..Default::default()
         };
 

@@ -12,6 +12,10 @@ pub struct Model {
     pub ticker_symbol: String,
     pub asset_type: AssetType,
     pub name: String,
+    #[sea_orm(column_type = "Decimal(Some((15, 2)))")]
+    pub current_price: Decimal,
+    pub unit: String,
+    pub last_update: Option<DateTimeUtc>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

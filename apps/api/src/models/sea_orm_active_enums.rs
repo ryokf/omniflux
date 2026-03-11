@@ -11,6 +11,8 @@ pub enum AssetType {
     Crypto,
     #[sea_orm(string_value = "Mutual Fund")]
     MutualFund,
+    #[sea_orm(string_value = "Commodity")]
+    Commodity,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "transaction_type")]

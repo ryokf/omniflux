@@ -9,6 +9,10 @@ pub struct Model {
     pub id: i32,
     pub user_id: i32,
     pub asset_id: i32,
+    #[sea_orm(column_type = "Decimal(Some((15, 4)))")]
+    pub quantity: Decimal,
+    #[sea_orm(column_type = "Decimal(Some((15, 2)))")]
+    pub price_at_purchase: Decimal,
     pub updated_at: Option<DateTimeUtc>,
 }
 

@@ -103,10 +103,20 @@ impl MigrationTrait for Migration {
                 .col(ColumnDef::new(Asset::TickerSymbol).string_len(20).not_null().unique_key())
                 .col(
                     ColumnDef::new(Asset::AssetType)
-                        .enumeration(Alias::new("asset_type"), ["Stock", "Crypto", "Mutual Fund"])
+                        .enumeration(Alias::new("asset_type"), [
+                            "Stock",
+                            "Crypto",
+                            "Mutual Fund",
+                            "Commodity",
+                        ])
                         .not_null()
                 )
                 .col(ColumnDef::new(Asset::Name).string_len(100).not_null())
+                .col(ColumnDef::new(Asset::CurrentPrice).decimal_len(15, 2).not_null().default(0.0))
+                .col(ColumnDef::new(Asset::Unit).string_len(20).not_null())
+                .col(
+                    ColumnDef::new(Asset::LastUpdate).timestamp().default(Expr::current_timestamp())
+                )
                 .to_owned()
         ).await?;
 
@@ -157,6 +167,13 @@ impl MigrationTrait for Migration {
                 .col(pk_auto(Portfolio::Id))
                 .col(ColumnDef::new(Portfolio::UserId).integer().not_null())
                 .col(ColumnDef::new(Portfolio::AssetId).integer().not_null())
+                .col(ColumnDef::new(Portfolio::Quantity).decimal_len(15, 4).not_null().default(0.0))
+                .col(
+                    ColumnDef::new(Portfolio::PriceAtPurchase)
+                        .decimal_len(15, 2)
+                        .not_null()
+                        .default(0.0)
+                )
                 .col(
                     ColumnDef::new(Portfolio::UpdatedAt)
                         .timestamp()
@@ -268,6 +285,9 @@ enum Asset {
     TickerSymbol,
     AssetType,
     Name,
+    CurrentPrice,
+    Unit,
+    LastUpdate,
 }
 
 #[derive(DeriveIden)]
@@ -286,6 +306,8 @@ enum Portfolio {
     Id,
     UserId,
     AssetId,
+    Quantity,
+    PriceAtPurchase,
     UpdatedAt,
 }
 

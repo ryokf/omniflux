@@ -1,7 +1,8 @@
 use crate::{ config::db, models::{ asset, sea_orm_active_enums::AssetType } };
-use sea_orm::{ EntityTrait, PaginatorTrait, Set, ColumnTrait, QueryFilter };
+use sea_orm::{ EntityTrait, PaginatorTrait, Set, ColumnTrait, QueryFilter, prelude::Decimal };
 use serde::Deserialize;
 use std::error::Error;
+use chrono::Utc;
 
 // Struct ini dipetakan langsung ke header file CSV dari Yahoo Finance
 #[derive(Debug, Deserialize)]
@@ -43,11 +44,17 @@ pub async fn crypto_seeder() -> Result<(), Box<dyn Error>> {
 
         // Lakukan parsing baris CSV ke dalam struct CryptoRecord
         if let Ok(record) = result {
+            // Ambil prefix dari ticker, misalnya "BTC-USD" -> "BTC"
+            let unit = record.symbol.split('-').next().unwrap_or(&record.symbol).to_string();
+
             let active_model = asset::ActiveModel {
                 // Ticker langsung dimasukkan karena formatnya sudah "BTC-USD"
                 ticker_symbol: Set(record.symbol),
                 name: Set(record.name),
                 asset_type: Set(AssetType::Crypto),
+                current_price: Set(Decimal::new(0, 0)),
+                unit: Set(unit),
+                last_update: Set(Some(Utc::now())),
                 ..Default::default()
             };
 
