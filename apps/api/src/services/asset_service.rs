@@ -1,9 +1,17 @@
-use crate::models::asset;
+use crate::models::asset::{ self, Model };
 use crate::utils::usd_to_idr_convert::usd_to_idr_convert;
 use chrono::{ Duration, Utc };
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
-use sea_orm::{ ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set };
+use sea_orm::{
+    ActiveModelTrait,
+    ColumnTrait,
+    DatabaseConnection,
+    DbErr,
+    EntityTrait,
+    QueryFilter,
+    Set,
+};
 
 pub async fn get_latest_price(
     ticker: &str,
@@ -64,4 +72,16 @@ pub async fn get_latest_price(
     } else {
         Ok(asset_model.current_price)
     }
+}
+
+pub async fn get_asset_by_id(id: i32, db: &DatabaseConnection) -> Result<Model, DbErr> {
+    let asset_model = asset::Entity
+        ::find()
+        .filter(asset::Column::Id.eq(id))
+        .one(db).await?
+        .ok_or_else(||
+            DbErr::Custom(format!("Aset dengan ID '{}' tidak ditemukan di database.", id))
+        )?;
+
+    Ok(asset_model)
 }

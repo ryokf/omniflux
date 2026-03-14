@@ -6,7 +6,6 @@ pub struct CreatePortfolioDto {
     pub user_id: i32,
     pub asset_id: i32,
     pub quantity: Decimal,
-    pub price_at_purchase: Decimal,
 }
 
 #[derive(Deserialize)]
