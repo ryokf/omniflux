@@ -57,7 +57,7 @@ pub async fn run_analytic_assistant(
         // Or we can just calculate total amount and let SeaOrm handle it if it supports it,
         // but Since transaction_date is Option<DateTimeUtc>, we'll filter in Rust if needed, or using database.
 
-        let mut condition = Condition::all().add(transaction::Column::UserId.eq(user.id));
+        let condition = Condition::all().add(transaction::Column::UserId.eq(user.id));
 
         let user_txs = transaction::Entity::find()
             .filter(condition)

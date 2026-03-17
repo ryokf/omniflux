@@ -1,19 +1,12 @@
-mod config;
-mod controllers;
-mod dto;
-mod middleware;
-mod models;
-mod routes;
-mod services;
-mod utils;
-
-use crate::utils::crypto_seeder::crypto_seeder;
-use crate::utils::gold_seeder::gold_seeder;
-use crate::utils::idx_stock_seeder::idx_stock_seeder;
-use crate::utils::usd_seeder::usd_seeder;
-use crate::utils::user_seeder::user_seeder;
+#![allow(dead_code)]
+use api::{
+    config, routes, services,
+    utils::{
+        crypto_seeder::crypto_seeder, gold_seeder::gold_seeder, idx_stock_seeder::idx_stock_seeder,
+        usd_seeder::usd_seeder, user_seeder::user_seeder,
+    },
+};
 use dotenvy::dotenv;
-
 use tokio_cron_scheduler::{Job, JobScheduler};
 
 #[tokio::main]
@@ -43,7 +36,7 @@ async fn main() {
     let app_state = config::db::db_state().await;
 
     // Set up scheduler
-    let mut sched = JobScheduler::new().await.unwrap();
+    let sched = JobScheduler::new().await.unwrap();
     let db_for_cron = app_state.db.clone();
 
     sched
