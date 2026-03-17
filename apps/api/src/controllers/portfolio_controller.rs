@@ -80,3 +80,16 @@ pub async fn delete_portfolio(
         }
     }
 }
+
+pub async fn get_net_worth(
+    State(state): State<AppState>,
+    jwt: Jwt,
+) -> Result<Json<ApiResponse<crate::dto::portfolio_dto::NetWorthResponseDto>>, (StatusCode, Json<ApiResponse<()>>)> {
+    match portfolio_service::get_portfolio_net_worth(jwt.sub, &state.db).await {
+        Ok(net_worth) => Ok(Json(ApiResponse::success("Net worth calculated successfully", net_worth))),
+        Err(e) => {
+            let message = format!("Failed to calculate net worth: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, Json(ApiResponse::error(&message))))
+        }
+    }
+}

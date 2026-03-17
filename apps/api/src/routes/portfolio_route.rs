@@ -4,12 +4,13 @@ use crate::{
     config::db::AppState,
     controllers::portfolio_controller::{
         create_portfolio, delete_portfolio, get_portfolio_by_id, get_portfolios_by_user_id,
-        update_portfolio,
+        update_portfolio, get_net_worth,
     },
 };
 
 pub fn portfolio_router() -> Router<AppState> {
     Router::new()
+        .route("/net-worth", get(get_net_worth))
         .route("/user/{user_id}", get(get_portfolios_by_user_id))
         .route("/{id}", get(get_portfolio_by_id))
         .route("/", post(create_portfolio))

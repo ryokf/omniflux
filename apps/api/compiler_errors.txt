@@ -1,0 +1,139 @@
+    Checking api v0.1.0 (/Users/ryokf/data/coding/omniflux - assets aggregator/apps/api)
+error[E0432]: unresolved import `crate::middleware::auth::auth_middleware`
+ --> src/routes/portfolio_route.rs:9:5
+  |
+9 |     middleware::auth::auth_middleware,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `auth_middleware` in `middleware::auth`
+
+error[E0432]: unresolved import `crate::middleware::auth::auth_middleware`
+ --> src/routes/transaction_route.rs:6:5
+  |
+6 |     middleware::auth::auth_middleware,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `auth_middleware` in `middleware::auth`
+
+warning: unused import: `super::asset::Entity as Asset`
+ --> src/models/prelude.rs:3:9
+  |
+3 | pub use super::asset::Entity as Asset;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `super::portfolio::Entity as Portfolio`
+ --> src/models/prelude.rs:4:9
+  |
+4 | pub use super::portfolio::Entity as Portfolio;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::transaction::Entity as Transaction`
+ --> src/models/prelude.rs:5:9
+  |
+5 | pub use super::transaction::Entity as Transaction;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::user::Entity as User`
+ --> src/models/prelude.rs:6:9
+  |
+6 | pub use super::user::Entity as User;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::wallet::Entity as Wallet`
+ --> src/models/prelude.rs:7:9
+  |
+7 | pub use super::wallet::Entity as Wallet;
+  |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error[E0277]: the trait bound `Jwt: Clone` is not satisfied
+  --> src/controllers/transaction_controller.rs:17:21
+   |
+17 |     Extension(jwt): Extension<Jwt>,
+   |                     ^^^^^^^^^ the trait `Clone` is not implemented for `Jwt`
+   |
+help: the trait `FromRequestParts<S>` is implemented for `axum::Extension<T>`
+  --> /Users/ryokf/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.8/src/extension.rs:83:1
+   |
+83 | / impl<T, S> FromRequestParts<S> for Extension<T>
+84 | | where
+85 | |     T: Clone + Send + Sync + 'static,
+86 | |     S: Send + Sync,
+   | |___________________^
+   = note: required for `axum::Extension<Jwt>` to implement `FromRequestParts<AppState>`
+   = help: see issue #48214
+help: consider annotating `Jwt` with `#[derive(Clone)]`
+  --> src/dto/user_dto.rs:16:1
+   |
+16 + #[derive(Clone)]
+17 | pub struct Jwt {
+   |
+
+error[E0277]: the trait bound `Jwt: Clone` is not satisfied
+  --> src/controllers/transaction_controller.rs:17:21
+   |
+17 |     Extension(jwt): Extension<Jwt>,
+   |                     ^^^^^^^^^ the trait `Clone` is not implemented for `Jwt`
+   |
+help: the trait `FromRequestParts<S>` is implemented for `axum::Extension<T>`
+  --> /Users/ryokf/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.8/src/extension.rs:83:1
+   |
+83 | / impl<T, S> FromRequestParts<S> for Extension<T>
+84 | | where
+85 | |     T: Clone + Send + Sync + 'static,
+86 | |     S: Send + Sync,
+   | |___________________^
+   = note: required for `axum::Extension<Jwt>` to implement `FromRequestParts<AppState>`
+note: required by a bound in `__axum_macros_check_create_transaction_1_from_request_check`
+  --> src/controllers/transaction_controller.rs:17:21
+   |
+17 |     Extension(jwt): Extension<Jwt>,
+   |                     ^^^^^^^^^ required by this bound in `__axum_macros_check_create_transaction_1_from_request_check`
+help: consider annotating `Jwt` with `#[derive(Clone)]`
+  --> src/dto/user_dto.rs:16:1
+   |
+16 + #[derive(Clone)]
+17 | pub struct Jwt {
+   |
+
+error[E0277]: the trait bound `fn(..., ..., ...) -> ... {create_transaction}: Handler<_, _>` is not satisfied
+    --> src/routes/transaction_route.rs:12:26
+     |
+  12 | ...", post(transaction_controller::create_transaction))
+     |       ---- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ unsatisfied trait bound
+     |       |
+     |       required by a bound introduced by this call
+     |
+     = help: the trait `Handler<_, _>` is not implemented for fn item `fn(..., ..., ...) -> ... {create_transaction}`
+     = note: Consider using `#[axum::debug_handler]` to improve the error message
+help: the following other types implement trait `Handler<T, S>`
+    --> /Users/ryokf/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.8/src/routing/method_routing.rs:1309:1
+     |
+1309 | / impl<S> Handler<(), S> for MethodRouter<S>
+1310 | | where
+1311 | |     S: Clone + 'static,
+     | |_______________________^ `MethodRouter<S>` implements `Handler<(), S>`
+     |
+    ::: /Users/ryokf/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.8/src/handler/mod.rs:313:1
+     |
+ 313 | / impl<H, S, T, L> Handler<T, S> for Layered<L, H...
+ 314 | | where
+ 315 | |     L: Layer<HandlerService<H, T, S>> + Clone +...
+ 316 | |     H: Handler<T, S>,
+...    |
+ 320 | |     T: 'static,
+ 321 | |     S: 'static,
+     | |_______________^ `Layered<L, H, T, S>` implements `Handler<T, S>`
+note: required by a bound in `post`
+    --> /Users/ryokf/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/axum-0.8.8/src/routing/method_routing.rs:445:1
+     |
+ 445 | top_level_handler_fn!(post, POST);
+     | ^^^^^^^^^^^^^^^^^^^^^^----^^^^^^^
+     | |                     |
+     | |                     required by a bound in this function
+     | required by this bound in `post`
+     = note: the full name for the type has been written to '/Users/ryokf/data/coding/omniflux - assets aggregator/apps/api/target/debug/deps/api-1fd6de4ede266e33.long-type-10423262477843627020.txt'
+     = note: consider using `--verbose` to print the full type name to the console
+     = note: this error originates in the macro `top_level_handler_fn` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+Some errors have detailed explanations: E0277, E0432.
+For more information about an error, try `rustc --explain E0277`.
+warning: `api` (bin "api") generated 5 warnings
+error: could not compile `api` (bin "api") due to 5 previous errors; 5 warnings emitted

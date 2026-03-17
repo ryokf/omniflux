@@ -108,3 +108,90 @@ pub async fn delete_portfolio(id: i32, db: &DatabaseConnection) -> Result<(), Db
     portfolio.delete(db).await?;
     Ok(())
 }
+
+pub async fn get_portfolio_net_worth(
+    user_id: i32,
+    db: &DatabaseConnection,
+) -> Result<crate::dto::portfolio_dto::NetWorthResponseDto, DbErr> {
+    use crate::dto::portfolio_dto::{AssetPerformanceDto, NetWorthResponseDto};
+    use crate::models::{asset, portfolio, wallet};
+    use futures::future::join_all;
+
+    let portfolios = portfolio::Entity::find()
+        .filter(portfolio::Column::UserId.eq(user_id))
+        .find_also_related(asset::Entity)
+        .all(db)
+        .await?;
+
+    let mut price_futures = Vec::new();
+    for (port, asset_opt) in &portfolios {
+        if let Some(asset) = asset_opt {
+            let ticker = asset.ticker_symbol.clone();
+            price_futures.push(async move {
+                let current_price = get_latest_price(&ticker, db).await.unwrap_or(Decimal::ZERO);
+                (port.asset_id, current_price, ticker)
+            });
+        }
+    }
+
+    let price_results = join_all(price_futures).await;
+
+    let mut portfolio_details = Vec::new();
+    let mut total_investments_value = Decimal::ZERO;
+    let mut total_unrealized_pnl = Decimal::ZERO;
+
+    for (port, asset_opt) in portfolios {
+        if let Some(_asset) = asset_opt {
+            let quantity = port.quantity.clone();
+            let average_purchase_price = port.price_at_purchase.clone();
+
+            let current_price = price_results
+                .iter()
+                .find(|(id, _, _)| *id == port.asset_id)
+                .map(|(_, price, _)| *price)
+                .unwrap_or(Decimal::ZERO);
+
+            let ticker = price_results
+                .iter()
+                .find(|(id, _, _)| *id == port.asset_id)
+                .map(|(_, _, t)| t.clone())
+                .unwrap_or_default();
+
+            let total_actual_value = current_price * quantity;
+            let unrealized_pnl = (current_price - average_purchase_price) * quantity;
+
+            total_investments_value += total_actual_value;
+            total_unrealized_pnl += unrealized_pnl;
+
+            portfolio_details.push(AssetPerformanceDto {
+                asset_id: port.asset_id,
+                ticker,
+                quantity,
+                average_purchase_price,
+                current_price,
+                total_actual_value,
+                unrealized_pnl,
+            });
+        }
+    }
+
+    let user_wallets = wallet::Entity::find()
+        .filter(wallet::Column::UserId.eq(user_id))
+        .all(db)
+        .await?;
+
+    let mut cash_balance = Decimal::ZERO;
+    for w in user_wallets {
+        cash_balance += w.balance;
+    }
+
+    let total_net_worth = cash_balance + total_investments_value;
+
+    Ok(NetWorthResponseDto {
+        cash_balance,
+        total_investments_value,
+        total_unrealized_pnl,
+        total_net_worth,
+        portfolio_details,
+    })
+}

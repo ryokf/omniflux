@@ -12,10 +12,13 @@ bcrypt = "0.19.0"
 chrono = { version = "0.4.44", features = ["serde"] }
 csv = "1.4.0"
 dotenvy = "0.15.7"
+futures = "0.3.31"
+
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
 rust_decimal = "1.40.0"
 sea-orm = { version = "1.1.19", features = ["sqlx-mysql", "runtime-tokio-rustls"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 tokio = { version = "1.50.0", features = ["full"] }
+uuid = { version = "1.22.0", features = ["v4"] }
 yahoo_finance_api = "4.1.0"

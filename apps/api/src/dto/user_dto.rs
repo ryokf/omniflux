@@ -12,7 +12,7 @@ pub struct UserLoginDto {
     pub password: String,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Jwt {
     pub sub: i32,
     pub exp: usize,
