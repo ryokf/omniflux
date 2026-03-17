@@ -11,7 +11,7 @@ pub async fn get_wallet_by_user_id(
     State(state): State<AppState>,
     _jwt: Jwt,
     Path(user_id): Path<i32>
-) -> Result<Json<ApiResponse<Wallet>>, (StatusCode, Json<ApiResponse<()>>)> {
+) -> Result<Json<ApiResponse<Vec<Wallet>>>, (StatusCode, Json<ApiResponse<()>>)> {
     match wallet_service::get_wallet_by_user_id(user_id, State(state)).await {
         Ok(wallet) => Ok(Json(ApiResponse::success("Wallet retrieved successfully", wallet))),
         Err(e) => {
