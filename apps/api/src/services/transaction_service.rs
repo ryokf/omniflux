@@ -22,7 +22,9 @@ pub async fn create_transaction(
         .filter(wallet::Column::UserId.eq(user_id))
         .one(&txn)
         .await?
-        .ok_or_else(|| DbErr::Custom("Dompet tidak ditemukan atau bukan milik Anda!".to_string()))?;
+        .ok_or_else(|| {
+            DbErr::Custom("Dompet tidak ditemukan atau bukan milik Anda!".to_string())
+        })?;
 
     let mut current_balance = wallet_model.balance;
 

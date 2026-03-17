@@ -1,10 +1,8 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 
 use crate::{
     config::db::AppState,
-    dto::{
-        api_response::ApiResponse, transaction_dto::CreateTransactionDto, user_dto::Jwt,
-    },
+    dto::{api_response::ApiResponse, transaction_dto::CreateTransactionDto, user_dto::Jwt},
     models::transaction::Model as Transaction,
     services::transaction_service,
 };

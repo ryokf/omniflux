@@ -1,10 +1,13 @@
-use axum::{ Router, routing::{ delete, get, post, put } };
+use axum::{
+    Router,
+    routing::{delete, get, post, put},
+};
 
 use crate::{
     config::db::AppState,
     controllers::portfolio_controller::{
-        create_portfolio, delete_portfolio, get_portfolio_by_id, get_portfolios_by_user_id,
-        update_portfolio, get_net_worth,
+        create_portfolio, delete_portfolio, get_net_worth, get_portfolio_by_id,
+        get_portfolios_by_user_id, update_portfolio,
     },
 };
 

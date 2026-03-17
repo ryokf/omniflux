@@ -1,13 +1,13 @@
 use crate::{
     config::db::AppState,
-    dto::user_dto::{ AuthResponseDto, CreateUserDto, Jwt, UserLoginDto },
-    models::user::{ ActiveModel, Column, Entity, Model },
+    dto::user_dto::{AuthResponseDto, CreateUserDto, Jwt, UserLoginDto},
+    models::user::{ActiveModel, Column, Entity, Model},
 };
-use axum::{ extract::{ State } };
-use bcrypt::{ DEFAULT_COST, hash, verify };
-use chrono::{ Duration, Utc };
-use jsonwebtoken::{ EncodingKey, Header, encode };
-use sea_orm::{ ActiveModelTrait, ActiveValue::Set, ColumnTrait, DbErr, EntityTrait, QueryFilter };
+use axum::extract::State;
+use bcrypt::{DEFAULT_COST, hash, verify};
+use chrono::{Duration, Utc};
+use jsonwebtoken::{EncodingKey, Header, encode};
+use sea_orm::{ActiveModelTrait, ActiveValue::Set, ColumnTrait, DbErr, EntityTrait, QueryFilter};
 
 pub async fn register(data: CreateUserDto, state: State<AppState>) -> Result<Model, DbErr> {
     let hashed_password = match hash(data.password, DEFAULT_COST) {
@@ -30,7 +30,8 @@ pub async fn register(data: CreateUserDto, state: State<AppState>) -> Result<Mod
 pub async fn login(data: UserLoginDto, state: State<AppState>) -> Result<AuthResponseDto, String> {
     let user_opt = Entity::find()
         .filter(Column::Email.eq(data.email))
-        .one(&state.db).await
+        .one(&state.db)
+        .await
         .map_err(|e| format!("Database error: {}", e))?;
 
     if let Some(user) = user_opt {
@@ -55,8 +56,9 @@ pub async fn login(data: UserLoginDto, state: State<AppState>) -> Result<AuthRes
             let token = encode(
                 &Header::default(),
                 &jwt_claim,
-                &EncodingKey::from_secret(secret.as_ref())
-            ).map_err(|_| "Gagal membuat token autentikasi".to_string())?;
+                &EncodingKey::from_secret(secret.as_ref()),
+            )
+            .map_err(|_| "Gagal membuat token autentikasi".to_string())?;
 
             Ok(AuthResponseDto { token: token })
         } else {

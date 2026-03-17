@@ -1,11 +1,7 @@
-use axum::{routing::post, Router};
+use axum::{Router, routing::post};
 
-use crate::{
-    config::db::AppState,
-    controllers::transaction_controller,
-};
+use crate::{config::db::AppState, controllers::transaction_controller};
 
 pub fn transaction_router() -> Router<AppState> {
-    Router::new()
-        .route("/", post(transaction_controller::create_transaction))
+    Router::new().route("/", post(transaction_controller::create_transaction))
 }

@@ -1,8 +1,11 @@
-use crate::{ config::db, models::{ asset, sea_orm_active_enums::AssetType } };
-use sea_orm::{ EntityTrait, PaginatorTrait, Set, ColumnTrait, QueryFilter, prelude::Decimal };
+use crate::{
+    config::db,
+    models::{asset, sea_orm_active_enums::AssetType},
+};
+use chrono::Utc;
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, Set, prelude::Decimal};
 use serde::Deserialize;
 use std::error::Error;
-use chrono::Utc;
 
 // Struct ini dipetakan langsung ke header file CSV dari Yahoo Finance
 #[derive(Debug, Deserialize)]
@@ -18,10 +21,10 @@ pub async fn crypto_seeder() -> Result<(), Box<dyn Error>> {
 
     // 1. Pengecekan Data Eksisting
     // Kita filter spesifik untuk tipe Crypto agar tidak bentrok dengan jumlah saham IDX
-    let count = asset::Entity
-        ::find()
+    let count = asset::Entity::find()
         .filter(asset::Column::AssetType.eq(AssetType::Crypto))
-        .count(&db_conn.db).await?;
+        .count(&db_conn.db)
+        .await?;
 
     if count > 0 {
         println!("✅ Data kripto sudah ada di database, melewati proses seeding.");
@@ -45,7 +48,12 @@ pub async fn crypto_seeder() -> Result<(), Box<dyn Error>> {
         // Lakukan parsing baris CSV ke dalam struct CryptoRecord
         if let Ok(record) = result {
             // Ambil prefix dari ticker, misalnya "BTC-USD" -> "BTC"
-            let unit = record.symbol.split('-').next().unwrap_or(&record.symbol).to_string();
+            let unit = record
+                .symbol
+                .split('-')
+                .next()
+                .unwrap_or(&record.symbol)
+                .to_string();
 
             let active_model = asset::ActiveModel {
                 // Ticker langsung dimasukkan karena formatnya sudah "BTC-USD"
@@ -69,9 +77,14 @@ pub async fn crypto_seeder() -> Result<(), Box<dyn Error>> {
     if !assets_to_insert.is_empty() {
         let total_inserted = assets_to_insert.len();
 
-        asset::Entity::insert_many(assets_to_insert).exec(&db_conn.db).await?;
+        asset::Entity::insert_many(assets_to_insert)
+            .exec(&db_conn.db)
+            .await?;
 
-        println!("🚀 Berhasil melakukan seeding {} aset kripto teratas ke database!", total_inserted);
+        println!(
+            "🚀 Berhasil melakukan seeding {} aset kripto teratas ke database!",
+            total_inserted
+        );
     } else {
         println!("⚠️ Tidak ada data kripto yang valid untuk dimasukkan.");
     }

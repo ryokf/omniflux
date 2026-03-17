@@ -1,6 +1,6 @@
-use crate::{ config::db, models::user };
-use bcrypt::{ DEFAULT_COST, hash };
-use sea_orm::{ EntityTrait, Set, ColumnTrait, QueryFilter };
+use crate::{config::db, models::user};
+use bcrypt::{DEFAULT_COST, hash};
+use sea_orm::{ColumnTrait, EntityTrait, QueryFilter, Set};
 use std::error::Error;
 
 pub async fn user_seeder() -> Result<(), Box<dyn Error>> {
@@ -21,8 +21,8 @@ pub async fn user_seeder() -> Result<(), Box<dyn Error>> {
 
     println!("⏳ Memulai proses seeding user default...");
 
-    let password_hash = hash("rahasia123", DEFAULT_COST)
-        .map_err(|e| format!("Gagal hash password: {}", e))?;
+    let password_hash =
+        hash("rahasia123", DEFAULT_COST).map_err(|e| format!("Gagal hash password: {}", e))?;
 
     let active_model = user::ActiveModel {
         email: Set(email.to_string()),

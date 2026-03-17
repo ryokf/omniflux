@@ -1,17 +1,17 @@
 use crate::models::asset;
-use chrono::{ Duration, Utc };
+use chrono::{Duration, Utc};
 use rust_decimal::Decimal;
-use sea_orm::{ ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set };
+use sea_orm::{ActiveModelTrait, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter, Set};
 
 /// Mengambil kurs USD/IDR dari cache database.
 /// Jika data kedaluwarsa (>1 hari) atau belum ada, akan memanggil Yahoo Finance.
 async fn get_usd_to_idr_rate(
-    db: &DatabaseConnection
+    db: &DatabaseConnection,
 ) -> Result<Decimal, Box<dyn std::error::Error>> {
-    let asset_model = asset::Entity
-        ::find()
+    let asset_model = asset::Entity::find()
         .filter(asset::Column::TickerSymbol.eq("USDIDR=X"))
-        .one(db).await?
+        .one(db)
+        .await?
         .ok_or("Aset USDIDR=X tidak ditemukan di database. Jalankan usd_seeder terlebih dahulu.")?;
 
     // Evaluasi apakah cache perlu diperbarui
@@ -39,9 +39,8 @@ async fn get_usd_to_idr_rate(
         let response = provider.get_latest_quotes("USDIDR=X", "1d").await?;
         let quote = response.last_quote()?;
 
-        let new_rate = Decimal::from_f64_retain(quote.close).ok_or(
-            "Gagal mengonversi kurs ke Decimal"
-        )?;
+        let new_rate =
+            Decimal::from_f64_retain(quote.close).ok_or("Gagal mengonversi kurs ke Decimal")?;
 
         // Update cache di database
         let mut active: asset::ActiveModel = asset_model.into();
@@ -58,7 +57,7 @@ async fn get_usd_to_idr_rate(
 /// Mengonversi jumlah USD ke IDR menggunakan kurs ter-cache.
 pub async fn usd_to_idr_convert(
     usd_amount: Decimal,
-    db: &DatabaseConnection
+    db: &DatabaseConnection,
 ) -> Result<Decimal, Box<dyn std::error::Error>> {
     let rate = get_usd_to_idr_rate(db).await?;
     Ok(usd_amount * rate)

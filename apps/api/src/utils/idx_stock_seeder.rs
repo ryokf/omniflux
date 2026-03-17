@@ -1,8 +1,11 @@
-use crate::{ config::db, models::{ asset, sea_orm_active_enums::AssetType } };
-use sea_orm::{ EntityTrait, PaginatorTrait, Set, prelude::Decimal };
+use crate::{
+    config::db,
+    models::{asset, sea_orm_active_enums::AssetType},
+};
+use chrono::Utc;
+use sea_orm::{EntityTrait, PaginatorTrait, Set, prelude::Decimal};
 use serde::Deserialize;
 use std::error::Error;
-use chrono::Utc;
 
 // Struct ini menyesuaikan dengan nama kolom persis yang ada di CSV Anda
 #[derive(Debug, Deserialize)]
@@ -53,7 +56,9 @@ pub async fn idx_stock_seeder() -> Result<(), Box<dyn Error>> {
     // 4. Eksekusi Bulk Insert jika ada data
     if !assets_to_insert.is_empty() {
         // SeaORM insert_many sangat efisien untuk data dalam jumlah besar
-        asset::Entity::insert_many(assets_to_insert).exec(&db_conn.db).await?;
+        asset::Entity::insert_many(assets_to_insert)
+            .exec(&db_conn.db)
+            .await?;
 
         println!("🚀 Berhasil melakukan seeding saham Indonesia ke database!");
     }

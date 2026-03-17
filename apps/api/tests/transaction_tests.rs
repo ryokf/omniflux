@@ -1,5 +1,5 @@
-use rust_decimal::Decimal;
 use chrono::NaiveDateTime;
+use rust_decimal::Decimal;
 use std::str::FromStr;
 
 #[tokio::test]

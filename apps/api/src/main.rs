@@ -1,18 +1,20 @@
 mod config;
-mod models;
 mod controllers;
-mod services;
-mod routes;
 mod dto;
 mod middleware;
+mod models;
+mod routes;
+mod services;
 mod utils;
 
-use dotenvy::dotenv;
-use crate::utils::idx_stock_seeder::idx_stock_seeder;
 use crate::utils::crypto_seeder::crypto_seeder;
 use crate::utils::gold_seeder::gold_seeder;
+use crate::utils::idx_stock_seeder::idx_stock_seeder;
 use crate::utils::usd_seeder::usd_seeder;
 use crate::utils::user_seeder::user_seeder;
+use dotenvy::dotenv;
+
+use tokio_cron_scheduler::{Job, JobScheduler};
 
 #[tokio::main]
 async fn main() {
@@ -38,7 +40,32 @@ async fn main() {
         eprintln!("Gagal melakukan seeding user default: {}", e);
     }
 
-    let app = routes::create_router().await;
+    let app_state = config::db::db_state().await;
+
+    // Set up scheduler
+    let mut sched = JobScheduler::new().await.unwrap();
+    let db_for_cron = app_state.db.clone();
+
+    sched
+        .add(
+            Job::new_async("0 * * * * *", move |_uuid, mut _l| {
+                let db = db_for_cron.clone();
+                Box::pin(async move {
+                    if let Err(e) = services::insight_service::run_analytic_assistant(&db).await {
+                        eprintln!("Error running analytic assistant: {}", e);
+                    } else {
+                        println!("Analytic assistant completed execution.");
+                    }
+                })
+            })
+            .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    sched.start().await.unwrap();
+
+    let app = routes::create_router(app_state).await;
     let listener = tokio::net::TcpListener::bind("0.0.0.0:4000").await.unwrap();
 
     println!("server running on http://localhost:4000");
