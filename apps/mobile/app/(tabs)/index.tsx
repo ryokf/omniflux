@@ -1,25 +1,93 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, Text, ScrollView, ActivityIndicator, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { Colors } from '@/src/constants/colors';
 import { Card } from '@/src/components/Card';
 import { TransactionItem } from '@/src/components/TransactionItem';
+import { apiClient } from '@/src/api/client';
+import * as SecureStore from 'expo-secure-store';
 import {
-    USER_PROFILE,
-    WALLETS,
-    TRANSACTIONS,
     formatRupiah,
-    getTotalNetWorth,
-    getExpenseByCategory,
+    getCategory,
+    TRANSACTIONS,
 } from '@/src/constants/dummy-data';
 
 export default function DashboardScreen() {
-    const netWorth = getTotalNetWorth();
-    const expenses = getExpenseByCategory();
-    const recentTx = TRANSACTIONS.slice(0, 5);
-    const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
+    const [loading, setLoading] = useState(true);
+    const [netWorth, setNetWorth] = useState(0);
+    const [wallets, setWallets] = useState<any[]>([]);
+    const [recentTx, setRecentTx] = useState<any[]>([]);
+    const [expenses, setExpenses] = useState<{name: string, total: number}[]>([]);
+    const userName = 'Pengguna';
 
+    const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
     const barColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
+
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true);
+            const strUserId = await SecureStore.getItemAsync('userId');
+            if (!strUserId) return; // User clearly not logged in, just wait.
+            
+            const [walletsRes, nwRes] = await Promise.all([
+                apiClient.get(`/wallets/${strUserId}`), // Correct endpoint path
+                apiClient.get('/portfolios/net-worth'),
+            ]);
+            
+            // Assume API can return data array directly or wrapped in { data: ... }
+            const wlts = Array.isArray(walletsRes.data?.data) ? walletsRes.data.data : (Array.isArray(walletsRes.data) ? walletsRes.data : []);
+            const nw = nwRes.data?.data?.totalNetWorth || nwRes.data?.totalNetWorth || nwRes.data?.data || nwRes.data || 0;
+            
+            // Backend doesn't have a GET /transactions route implemented. Fallback to Dummy data for this one.
+            const txs = TRANSACTIONS; 
+            
+            // In API, amount could be returned as string or number depending on backend decimal handling
+            setWallets(wlts.map((w: any) => ({ ...w, balance: Number(w.balance || w.balance_amount || 0) })));
+            setNetWorth(Number(nw));
+            
+            // Map the transaction data
+            const mappedTxs = txs.map((t: any) => ({ ...t, amount: Number(t.amount || 0) }));
+            setRecentTx(mappedTxs.slice(0, 5));
+            
+            // Compute expenses 
+            const expTxs = mappedTxs.filter((t: any) => t.amount < 0);
+            const map: Record<string, number> = {};
+            for (const t of expTxs) {
+                const cat = getCategory(t.category_id || t.categoryId);
+                const name = cat?.name ?? "Lainnya";
+                map[name] = (map[name] ?? 0) + Math.abs(t.amount);
+            }
+            setExpenses(Object.entries(map).map(([name, total]) => ({ name, total })).sort((a, b) => b.total - a.total));
+
+        } catch (error: any) {
+            console.error('Failed to fetch dashboard data', error.response?.data || error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchDashboardData();
+        }, [])
+    );
+
+    useEffect(() => {
+        const sub = DeviceEventEmitter.addListener('refreshDashboard', () => {
+             fetchDashboardData();
+        });
+        return () => sub.remove();
+    }, []);
+
+    if (loading && wallets.length === 0) {
+        return (
+            <SafeAreaView className="flex-1 bg-bg justify-center items-center">
+                <ActivityIndicator size="large" color={Colors.primary} />
+                <Text className="text-txt-secondary mt-4 font-medium">Memuat data...</Text>
+            </SafeAreaView>
+        );
+    }
 
     return (
         <SafeAreaView className="flex-1 bg-bg">
@@ -33,7 +101,7 @@ export default function DashboardScreen() {
                     <View>
                         <Text className="text-txt-secondary text-sm">Selamat datang 👋</Text>
                         <Text className="text-txt text-[22px] font-extrabold mt-0.5">
-                            {USER_PROFILE.name}
+                            {userName}
                         </Text>
                     </View>
                     <View className="w-11 h-11 rounded-[14px] bg-primary/30 justify-center items-center">
@@ -64,9 +132,9 @@ export default function DashboardScreen() {
                     className="mb-6"
                     contentContainerStyle={{ gap: 12 }}
                 >
-                    {WALLETS.map(wallet => (
-                        <Card key={wallet.id} elevated style={{ width: 160 }}>
-                            <Text className="text-2xl mb-2">{wallet.icon}</Text>
+                    {wallets.map(wallet => (
+                        <Card key={wallet.id || wallet.wallet_id} elevated style={{ width: 160 }}>
+                            <Text className="text-2xl mb-2">{wallet.icon || '🏦'}</Text>
                             <Text className="text-txt-secondary text-xs">{wallet.name}</Text>
                             <Text className="text-txt text-[17px] font-bold mt-1">
                                 {formatRupiah(wallet.balance)}
@@ -104,14 +172,17 @@ export default function DashboardScreen() {
                 {/* Recent Transactions */}
                 <Text className="text-txt text-[17px] font-bold mb-1">Transaksi Terakhir</Text>
                 <Card>
+                    {recentTx.length === 0 && (
+                        <Text className="text-txt-muted text-center py-4 text-sm font-medium">Belum ada transaksi</Text>
+                    )}
                     {recentTx.map(tx => (
                         <TransactionItem
-                            key={tx.id}
+                            key={tx.id || tx.transaction_id}
                             description={tx.description}
                             amount={tx.amount}
-                            categoryId={tx.categoryId}
-                            date={tx.date}
-                            aiConfidence={tx.aiConfidence}
+                            categoryId={tx.category_id || tx.categoryId}
+                            date={tx.date || tx.createdAt || tx.created_at}
+                            aiConfidence={tx.aiConfidence || tx.ai_confidence}
                         />
                     ))}
                 </Card>

@@ -7,10 +7,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/src/constants/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as SecureStore from 'expo-secure-store';
+import { apiClient } from '@/src/api/client';
+
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,12 +22,44 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Harap isi email dan kata sandi');
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      // Aksi 1: Kirim request POST ke rute Login
+      const response = await apiClient.post('/users/login', { email, password });
+
+      const token = response.data?.data?.token || response.data?.token;
+      if (token) {
+        // Parse JWT to get user ID
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const userId = payload.sub;
+          if (userId) {
+            await SecureStore.setItemAsync('userId', String(userId));
+          }
+        } catch (e) {
+          console.warn('Failed to parse JWT payload', e);
+        }
+
+        // Aksi 2: Penyimpanan Aman
+        await SecureStore.setItemAsync('userToken', token);
+
+        // Aksi 3: Perubahan State / Navigasi
+        router.replace('/(tabs)');
+      } else {
+        Alert.alert('Login Gagal', 'Token tidak diterima dari server');
+      }
+    } catch (error: any) {
+      console.error('Login Error:', error.response?.data || error.message);
+      Alert.alert('Login Gagal', error.response?.data?.message || 'Gagal tersambung ke server. Pastikan IP lokal benar dan server menyala.');
+    } finally {
       setLoading(false);
-      router.replace('/(tabs)');
-    }, 1200);
+    }
   };
 
   return (

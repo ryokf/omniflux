@@ -9,10 +9,13 @@ import {
     Pressable,
     KeyboardAvoidingView,
     Platform,
+    Alert,
+    DeviceEventEmitter,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
 import { WALLETS, CATEGORIES, ASSET_SYMBOLS } from '@/src/constants/dummy-data';
+import { apiClient } from '@/src/api/client';
 
 interface ManualInputModalProps {
     visible: boolean;
@@ -147,9 +150,51 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
         setInvQty(''); setInvPrice(''); setInvWallet('');
     };
 
-    const handleSave = () => {
-        resetForm();
-        onClose();
+    const handleSave = async () => {
+        try {
+            let payload: any = {};
+            if (activeTab === 'cashflow') {
+                if (!cfWallet || !cfCategory || !cfAmount) {
+                    Alert.alert('Error', 'Harap isi dompet, kategori, dan nominal.');
+                    return;
+                }
+                const isExpense = CATEGORIES.find(c => c.id === Number(cfCategory))?.type === 'expense';
+                const amountNum = Number(cfAmount);
+                const finalAmount = isExpense ? -Math.abs(amountNum) : Math.abs(amountNum);
+                
+                payload = {
+                    walletId: Number(cfWallet),
+                    categoryId: Number(cfCategory),
+                    amount: finalAmount,
+                    description: cfNote || 'Transaksi Manual',
+                    date: new Date().toISOString()
+                };
+            } else {
+                if (!invWallet || !invQty || !invPrice) {
+                    Alert.alert('Error', 'Harap isi semua data investasi.');
+                    return;
+                }
+                const totalVal = Number(invQty) * Number(invPrice);
+                payload = {
+                    walletId: Number(invWallet),
+                    amount: invType === 'buy' ? -Math.abs(totalVal) : Math.abs(totalVal),
+                    description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${invSymbol || invAssetType}`,
+                    date: new Date().toISOString()
+                };
+            }
+
+            await apiClient.post('/transactions', payload);
+            
+            // Solusi Langkah 5: Pemicu ulang untuk memperbarui layar Dashboard
+            DeviceEventEmitter.emit('refreshDashboard');
+            
+            Alert.alert('Sukses', 'Data berhasil dikirim ke server!');
+            resetForm();
+            onClose();
+        } catch (error: any) {
+            console.error('Error saving transaction:', error.response?.data || error.message);
+            Alert.alert('Gagal', 'Terjadi kesalahan saat menghubungi server.');
+        }
     };
 
     return (
