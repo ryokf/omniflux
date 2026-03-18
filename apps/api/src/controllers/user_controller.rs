@@ -1,7 +1,7 @@
 use crate::{
     dto::{
         api_response::ApiResponse,
-        user_dto::{AuthResponseDto, CreateUserDto, UserLoginDto},
+        user_dto::{AuthResponseDto, CreateUserDto, UserLoginDto, UserProfileDto, Jwt},
     },
     models::user::Model as User,
     services::user_service,
@@ -37,6 +37,22 @@ pub async fn login(
         Ok(token) => Ok(Json(ApiResponse::success("Login successful", token))),
         Err(e) => {
             let message = format!("Failed to login : {}", e);
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::error(&message)),
+            ))
+        }
+    }
+}
+
+pub async fn get_profile(
+    State(state): State<AppState>,
+    jwt: Jwt,
+) -> Result<Json<ApiResponse<UserProfileDto>>, (StatusCode, Json<ApiResponse<()>>)> {
+    match user_service::get_profile(jwt.sub, State(state)).await {
+        Ok(profile) => Ok(Json(ApiResponse::success("Profile retrieved successfully", profile))),
+        Err(e) => {
+            let message = format!("Failed to retrieve profile: {}", e);
             Err((
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(ApiResponse::error(&message)),

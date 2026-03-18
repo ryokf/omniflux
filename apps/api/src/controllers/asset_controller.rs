@@ -25,3 +25,22 @@ pub async fn get_latest_price(
         }
     }
 }
+
+pub async fn get_assets(
+    State(state): State<AppState>,
+    _jwt: crate::dto::user_dto::Jwt,
+) -> Result<Json<ApiResponse<Vec<crate::models::asset::Model>>>, (StatusCode, Json<ApiResponse<()>>)> {
+    match asset_service::get_assets(&state.db).await {
+        Ok(assets) => Ok(Json(ApiResponse::success(
+            "Assets retrieved successfully",
+            assets,
+        ))),
+        Err(e) => {
+            let message = format!("Failed to retrieve assets: {}", e);
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::error(&message)),
+            ))
+        }
+    }
+}

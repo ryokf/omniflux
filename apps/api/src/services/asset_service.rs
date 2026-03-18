@@ -91,3 +91,7 @@ pub async fn get_asset_by_id(id: i32, db: &DatabaseConnection) -> Result<Model, 
 
     Ok(asset_model)
 }
+
+pub async fn get_assets(db: &DatabaseConnection) -> Result<Vec<Model>, DbErr> {
+    asset::Entity::find().all(db).await
+}

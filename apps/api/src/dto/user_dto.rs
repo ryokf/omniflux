@@ -22,3 +22,11 @@ pub struct Jwt {
 pub struct AuthResponseDto {
     pub token: String,
 }
+
+#[derive(Serialize)]
+pub struct UserProfileDto {
+    pub id: i32,
+    pub email: String,
+    pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+

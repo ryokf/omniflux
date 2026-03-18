@@ -65,3 +65,13 @@ pub async fn create_transaction(
 
     Ok(saved_transaction)
 }
+
+pub async fn get_transactions_by_user(user_id: i32, db: &DatabaseConnection) -> Result<Vec<transaction::Model>, DbErr> {
+    use sea_orm::{QueryOrder, QuerySelect};
+    transaction::Entity::find()
+        .filter(transaction::Column::UserId.eq(user_id))
+        .order_by_desc(transaction::Column::TransactionDate)
+        .limit(20)
+        .all(db)
+        .await
+}

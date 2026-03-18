@@ -7,11 +7,7 @@ import { Card } from '@/src/components/Card';
 import { TransactionItem } from '@/src/components/TransactionItem';
 import { apiClient } from '@/src/api/client';
 import * as SecureStore from 'expo-secure-store';
-import {
-    formatRupiah,
-    getCategory,
-    TRANSACTIONS,
-} from '@/src/constants/dummy-data';
+import { formatRupiah } from '@/src/utils/format';
 
 export default function DashboardScreen() {
     const [loading, setLoading] = useState(true);
@@ -19,7 +15,7 @@ export default function DashboardScreen() {
     const [wallets, setWallets] = useState<any[]>([]);
     const [recentTx, setRecentTx] = useState<any[]>([]);
     const [expenses, setExpenses] = useState<{name: string, total: number}[]>([]);
-    const userName = 'Pengguna';
+    const [userName, setUserName] = useState('Pengguna');
 
     const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
     const barColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
@@ -30,31 +26,32 @@ export default function DashboardScreen() {
             const strUserId = await SecureStore.getItemAsync('userId');
             if (!strUserId) return; // User clearly not logged in, just wait.
             
-            const [walletsRes, nwRes] = await Promise.all([
-                apiClient.get(`/wallets/${strUserId}`), // Correct endpoint path
+            const [walletsRes, nwRes, txRes, catRes, userRes] = await Promise.all([
+                apiClient.get(`/wallets/${strUserId}`),
                 apiClient.get('/portfolios/net-worth'),
+                apiClient.get('/transactions'),
+                apiClient.get('/categories'),
+                apiClient.get('/users/me')
             ]);
             
-            // Assume API can return data array directly or wrapped in { data: ... }
             const wlts = Array.isArray(walletsRes.data?.data) ? walletsRes.data.data : (Array.isArray(walletsRes.data) ? walletsRes.data : []);
             const nw = nwRes.data?.data?.totalNetWorth || nwRes.data?.totalNetWorth || nwRes.data?.data || nwRes.data || 0;
+            const txs = Array.isArray(txRes.data?.data) ? txRes.data.data : (Array.isArray(txRes.data) ? txRes.data : []);
+            const cats = Array.isArray(catRes.data?.data) ? catRes.data.data : (Array.isArray(catRes.data) ? catRes.data : []);
+            const user = userRes.data?.data || userRes.data || {};
             
-            // Backend doesn't have a GET /transactions route implemented. Fallback to Dummy data for this one.
-            const txs = TRANSACTIONS; 
+            setUserName(user.name || user.email?.split('@')[0] || 'Pengguna');
             
-            // In API, amount could be returned as string or number depending on backend decimal handling
             setWallets(wlts.map((w: any) => ({ ...w, balance: Number(w.balance || w.balance_amount || 0) })));
             setNetWorth(Number(nw));
             
-            // Map the transaction data
             const mappedTxs = txs.map((t: any) => ({ ...t, amount: Number(t.amount || 0) }));
             setRecentTx(mappedTxs.slice(0, 5));
             
-            // Compute expenses 
             const expTxs = mappedTxs.filter((t: any) => t.amount < 0);
             const map: Record<string, number> = {};
             for (const t of expTxs) {
-                const cat = getCategory(t.category_id || t.categoryId);
+                const cat = cats.find((c: any) => c.id === (t.category_id || t.categoryId));
                 const name = cat?.name ?? "Lainnya";
                 map[name] = (map[name] ?? 0) + Math.abs(t.amount);
             }

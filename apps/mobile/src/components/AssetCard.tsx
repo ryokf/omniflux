@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { formatRupiah } from '@/src/constants/dummy-data';
+import { formatRupiah } from '@/src/utils/format';
 
 interface AssetCardProps {
     tickerSymbol: string;

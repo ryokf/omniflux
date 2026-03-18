@@ -1,6 +1,6 @@
 use crate::{
     config::db::AppState,
-    dto::user_dto::{AuthResponseDto, CreateUserDto, Jwt, UserLoginDto},
+    dto::user_dto::{AuthResponseDto, CreateUserDto, Jwt, UserLoginDto, UserProfileDto},
     models::user::{ActiveModel, Column, Entity, Model},
 };
 use axum::extract::State;
@@ -68,3 +68,22 @@ pub async fn login(data: UserLoginDto, state: State<AppState>) -> Result<AuthRes
         Err("Email salah".to_string())
     }
 }
+
+pub async fn get_profile(user_id: i32, state: State<AppState>) -> Result<UserProfileDto, String> {
+    let user_opt = Entity::find()
+        .filter(Column::Id.eq(user_id))
+        .one(&state.db)
+        .await
+        .map_err(|e| format!("Database error: {}", e))?;
+
+    match user_opt {
+        Some(user) => Ok(UserProfileDto {
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at,
+            
+        }),
+        None => Err("User not found".to_string()),
+    }
+}
+

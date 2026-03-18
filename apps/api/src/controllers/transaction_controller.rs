@@ -29,3 +29,22 @@ pub async fn create_transaction(
         }
     }
 }
+
+pub async fn get_transactions(
+    State(state): State<AppState>,
+    jwt: Jwt,
+) -> Result<Json<ApiResponse<Vec<Transaction>>>, (StatusCode, Json<ApiResponse<()>>)> {
+    match transaction_service::get_transactions_by_user(jwt.sub, &state.db).await {
+        Ok(txs) => Ok(Json(ApiResponse::success(
+            "Transactions retrieved successfully",
+            txs,
+        ))),
+        Err(e) => {
+            let message = format!("Failed to retrieve transactions: {}", e);
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(ApiResponse::error(&message)),
+            ))
+        }
+    }
+}

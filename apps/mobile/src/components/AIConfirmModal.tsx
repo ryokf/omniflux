@@ -13,7 +13,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
-import { WALLETS, CATEGORIES, formatRupiah } from '@/src/constants/dummy-data';
+import { formatRupiah } from '@/src/utils/format';
+
+const WALLETS = [{ id: 1, name: "BCA Utama", balance: 12500000, icon: "🏦" }];
+const CATEGORIES = [
+  { id: 1, name: "Makanan", type: "expense" as const, icon: "🍔" },
+  { id: 5, name: "Belanja", type: "expense" as const, icon: "🛍️" },
+  { id: 6, name: "Gaji", type: "income" as const, icon: "💰" }
+];
 
 interface AIExtraction {
     amount: number;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,33 +7,61 @@ import { Card } from '@/src/components/Card';
 import { TransactionItem } from '@/src/components/TransactionItem';
 import { ManualInputModal } from '@/src/components/ManualInputModal';
 import { AIConfirmModal } from '@/src/components/AIConfirmModal';
-import {
-    TRANSACTIONS,
-    getExpenseByCategory,
-    formatRupiah,
-} from '@/src/constants/dummy-data';
+import { formatRupiah } from '@/src/utils/format';
+import { apiClient } from '@/src/api/client';
+import { useFocusEffect } from 'expo-router';
 
 export default function TransactionsScreen() {
     const [inputText, setInputText] = useState('');
-    const [isProcessing, setIsProcessing] = useState(false);
     const [showManual, setShowManual] = useState(false);
     const [showAIConfirm, setShowAIConfirm] = useState(false);
     const [pendingInput, setPendingInput] = useState('');
-    const expenses = getExpenseByCategory();
+    
+    const [transactions, setTransactions] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const loadData = async () => {
+        try {
+            setIsLoading(true);
+            const [txRes, catRes] = await Promise.all([
+                apiClient.get('/transactions'),
+                apiClient.get('/categories')
+            ]);
+            const txs = Array.isArray(txRes.data?.data) ? txRes.data.data : (Array.isArray(txRes.data) ? txRes.data : []);
+            const cats = Array.isArray(catRes.data?.data) ? catRes.data.data : (Array.isArray(catRes.data) ? catRes.data : []);
+            setTransactions(txs.map((t: any) => ({ ...t, amount: Number(t.amount || 0) })));
+            setCategories(cats);
+        } catch (e: any) {
+            console.error("Failed to load transactions", e.response?.data || e.message);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+
+    useFocusEffect(useCallback(() => { loadData(); }, []));
+
+    const expensesMap = transactions.filter(t => t.amount < 0).reduce((map, t) => {
+        const cat = categories.find(c => c.id === (t.category_id || t.categoryId));
+        const name = cat?.name ?? "Lainnya";
+        map[name] = (map[name] || 0) + Math.abs(t.amount);
+        return map;
+    }, {} as Record<string, number>);
+    
+    const expenses = Object.entries(expensesMap).map(([name, total]) => ({name: String(name), total: Number(total)})).sort((a: {total: number}, b: {total: number}) => b.total - a.total);
     const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
 
     const handleSend = () => {
         if (!inputText.trim()) return;
-        // Store the input, open AI confirmation modal
         setPendingInput(inputText.trim());
         setInputText('');
         setShowAIConfirm(true);
     };
 
     const handleAIConfirm = () => {
-        // In real app: POST to backend, update transactions list
         setShowAIConfirm(false);
         setPendingInput('');
+        loadData(); // refresh data
     };
 
     const legendColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
@@ -101,7 +129,7 @@ export default function TransactionsScreen() {
                                     />
                                     <Text className="text-txt-secondary flex-1">{cat.name}</Text>
                                     <Text className="text-txt font-semibold">
-                                        {((cat.total / totalExpense) * 100).toFixed(0)}%
+                                        {totalExpense > 0 ? ((cat.total / totalExpense) * 100).toFixed(0) : 0}%
                                     </Text>
                                 </View>
                             ))}
@@ -112,23 +140,29 @@ export default function TransactionsScreen() {
                 {/* Transaction History */}
                 <View className="flex-row justify-between items-center mb-2">
                     <Text className="text-txt text-[17px] font-bold">Riwayat Transaksi</Text>
-                    <Text className="text-primary text-[13px] font-semibold">{TRANSACTIONS.length} transaksi</Text>
+                    <Text className="text-primary text-[13px] font-semibold">{transactions.length} transaksi</Text>
                 </View>
                 <Card>
-                    {TRANSACTIONS.map(tx => (
-                        <TransactionItem
-                            key={tx.id}
-                            description={tx.description}
-                            amount={tx.amount}
-                            categoryId={tx.categoryId}
-                            date={tx.date}
-                            aiConfidence={tx.aiConfidence}
-                        />
-                    ))}
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color={Colors.primary} className="py-4" />
+                    ) : transactions.length === 0 ? (
+                        <Text className="text-txt-muted text-center py-4 text-sm font-medium">Belum ada transaksi</Text>
+                    ) : (
+                        transactions.map(tx => (
+                            <TransactionItem
+                                key={tx.id || tx.transaction_id}
+                                description={tx.description}
+                                amount={tx.amount}
+                                categoryId={tx.category_id || tx.categoryId}
+                                date={tx.date || tx.createdAt || tx.transaction_date || tx.created_at}
+                                aiConfidence={tx.aiConfidence || tx.ai_confidence}
+                            />
+                        ))
+                    )}
                 </Card>
             </ScrollView>
 
-            <ManualInputModal visible={showManual} onClose={() => setShowManual(false)} />
+            <ManualInputModal visible={showManual} onClose={() => { setShowManual(false); loadData(); }} />
             <AIConfirmModal
                 visible={showAIConfirm}
                 rawInput={pendingInput}

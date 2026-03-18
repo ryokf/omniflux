@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
-import { WALLETS, CATEGORIES, ASSET_SYMBOLS } from '@/src/constants/dummy-data';
 import { apiClient } from '@/src/api/client';
+import * as SecureStore from 'expo-secure-store';
 
 interface ManualInputModalProps {
     visible: boolean;
@@ -132,17 +132,58 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     const [invPrice, setInvPrice] = useState('');
     const [invWallet, setInvWallet] = useState('');
 
-    const walletOptions = WALLETS.map(w => ({ value: String(w.id), label: `${w.icon} ${w.name}` }));
-    const categoryOptions = CATEGORIES.map(c => ({ value: String(c.id), label: `${c.icon} ${c.name}` }));
+    // Dynamic Lists
+    const [wallets, setWallets] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [assets, setAssets] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (!visible) return;
+        let isMounted = true;
+        
+        async function loadOptions() {
+            try {
+                const strUserId = await SecureStore.getItemAsync('userId');
+                if (!strUserId) return;
+                
+                const [wRes, cRes, aRes] = await Promise.all([
+                    apiClient.get(`/wallets/${strUserId}`),
+                    apiClient.get('/categories'),
+                    apiClient.get('/assets')
+                ]);
+                
+                if (!isMounted) return;
+                
+                const wlts = Array.isArray(wRes.data?.data) ? wRes.data.data : (Array.isArray(wRes.data) ? wRes.data : []);
+                const cats = Array.isArray(cRes.data?.data) ? cRes.data.data : (Array.isArray(cRes.data) ? cRes.data : []);
+                const asts = Array.isArray(aRes.data?.data) ? aRes.data.data : (Array.isArray(aRes.data) ? aRes.data : []);
+                
+                setWallets(wlts);
+                setCategories(cats);
+                setAssets(asts);
+            } catch (e: any) {
+                console.error('Failed to load modal options', e.response?.data || e.message);
+            }
+        }
+        
+        loadOptions();
+        return () => { isMounted = false; }
+    }, [visible]);
+
+    const walletOptions = wallets.map(w => ({ value: String(w.id || w.wallet_id), label: `${w.icon || '🏦'} ${w.name}` }));
+    const categoryOptions = categories.map(c => ({ value: String(c.id), label: `${c.icon || '📌'} ${c.name}` }));
     const assetTypeOptions = [
         { value: 'Crypto', label: '₿ Kripto' },
         { value: 'Stock', label: '📊 Saham' },
         { value: 'Mutual Fund', label: '📦 Reksa Dana' },
     ];
-    const symbolOptions = (ASSET_SYMBOLS[invAssetType] ?? []).map(a => ({
-        value: a.symbol,
-        label: `${a.symbol} — ${a.name}`,
-    }));
+    
+    const symbolOptions = assets
+        .filter(a => a.asset_type === invAssetType || a.assetType === invAssetType)
+        .map(a => ({
+            value: String(a.id),
+            label: `${a.ticker_symbol || a.tickerSymbol} — ${a.name}`,
+        }));
 
     const resetForm = () => {
         setCfWallet(''); setCfCategory(''); setCfAmount(''); setCfNote('');
@@ -158,7 +199,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                     Alert.alert('Error', 'Harap isi dompet, kategori, dan nominal.');
                     return;
                 }
-                const isExpense = CATEGORIES.find(c => c.id === Number(cfCategory))?.type === 'expense';
+                const isExpense = categories.find(c => String(c.id) === cfCategory)?.type === 'expense';
                 const amountNum = Number(cfAmount);
                 const finalAmount = isExpense ? -Math.abs(amountNum) : Math.abs(amountNum);
                 
@@ -178,14 +219,13 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                 payload = {
                     walletId: Number(invWallet),
                     amount: invType === 'buy' ? -Math.abs(totalVal) : Math.abs(totalVal),
-                    description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${invSymbol || invAssetType}`,
+                    description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${invAssetType}`,
                     date: new Date().toISOString()
                 };
             }
 
             await apiClient.post('/transactions', payload);
             
-            // Solusi Langkah 5: Pemicu ulang untuk memperbarui layar Dashboard
             DeviceEventEmitter.emit('refreshDashboard');
             
             Alert.alert('Sukses', 'Data berhasil dikirim ke server!');

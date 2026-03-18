@@ -2,7 +2,10 @@ import React from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NotificationItem } from '@/src/components/NotificationItem';
-import { INSIGHTS } from '@/src/constants/dummy-data';
+const INSIGHTS = [
+  { id: 1, type: "budget_alert", message: "Pengeluaran makanan bulan ini sudah 80% dari rata-rata.", isRead: false, createdAt: "2026-03-07T20:00:00Z" },
+  { id: 3, type: "savings_milestone", message: "Selamat! Anda berhasil menghemat Rp 1.2 juta dibanding bulan lalu.", isRead: true, createdAt: "2026-03-06T09:00:00Z" }
+];
 
 export default function NotificationsScreen() {
     const unreadCount = INSIGHTS.filter(i => !i.isRead).length;

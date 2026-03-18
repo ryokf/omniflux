@@ -3,12 +3,19 @@ import { View, Text, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '@/src/components/Card';
 import { AssetCard } from '@/src/components/AssetCard';
-import {
-    PORTFOLIO_ASSETS,
-    WALLETS,
-    formatRupiah,
-    getTotalNetWorth,
-} from '@/src/constants/dummy-data';
+import { formatRupiah } from '@/src/utils/format';
+
+const PORTFOLIO_ASSETS = [
+  { id: 1, tickerSymbol: "BTC", assetType: "Crypto" as const, name: "Bitcoin", quantity: 0.015, totalValue: 15300000, pnlPercent: 7.37, icon: "₿", avgBuyPrice: 950000000, currentPrice: 1020000000 },
+  { id: 3, tickerSymbol: "BBCA", assetType: "Stock" as const, name: "Bank Central Asia Tbk", quantity: 200, totalValue: 1970000, pnlPercent: 7.07, icon: "📊", avgBuyPrice: 9200, currentPrice: 9850 }
+];
+
+const WALLETS = [
+  { id: 1, name: "BCA Utama", balance: 12500000, icon: "🏦" },
+  { id: 2, name: "Gopay", balance: 850000, icon: "📱" },
+];
+
+const getTotalNetWorth = () => 12500000 + 850000 + 15300000 + 1970000;
 
 export default function PortfolioScreen() {
     const netWorth = getTotalNetWorth();

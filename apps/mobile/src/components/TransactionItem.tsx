@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { getCategory, formatCompactRupiah } from '@/src/constants/dummy-data';
+import { getCategoryIcon, formatCompactRupiah } from '@/src/utils/format';
 
 interface TransactionItemProps {
     description: string;
@@ -17,7 +17,7 @@ export function TransactionItem({
     date,
     aiConfidence,
 }: TransactionItemProps) {
-    const category = getCategory(categoryId);
+    const category = getCategoryIcon(categoryId);
     const isExpense = amount < 0;
     const formattedDate = new Date(date).toLocaleDateString('id-ID', {
         day: 'numeric',

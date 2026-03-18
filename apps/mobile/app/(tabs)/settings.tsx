@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/src/constants/colors';
 import { Card } from '@/src/components/Card';
-import { USER_PROFILE } from '@/src/constants/dummy-data';
+const USER_PROFILE = { name: "Aryo K.", email: "aryokf@example.com" };
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
