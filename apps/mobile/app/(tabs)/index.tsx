@@ -1,10 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, DeviceEventEmitter } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
 import { Card } from '@/src/components/Card';
 import { TransactionItem } from '@/src/components/TransactionItem';
+import { AddWalletModal } from '@/src/components/AddWalletModal';
 import { apiClient } from '@/src/api/client';
 import * as SecureStore from 'expo-secure-store';
 import { formatRupiah } from '@/src/utils/format';
@@ -16,6 +18,7 @@ export default function DashboardScreen() {
     const [recentTx, setRecentTx] = useState<any[]>([]);
     const [expenses, setExpenses] = useState<{name: string, total: number}[]>([]);
     const [userName, setUserName] = useState('Pengguna');
+    const [showAddWallet, setShowAddWallet] = useState(false);
 
     const totalExpense = expenses.reduce((s, e) => s + e.total, 0);
     const barColors = [Colors.primary, Colors.secondary, Colors.profit, Colors.warning, Colors.loss];
@@ -123,22 +126,57 @@ export default function DashboardScreen() {
 
                 {/* Wallets */}
                 <Text className="text-txt text-[17px] font-bold mb-3">Sumber Dana</Text>
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    className="mb-6"
-                    contentContainerStyle={{ gap: 12 }}
-                >
-                    {wallets.map(wallet => (
-                        <Card key={wallet.id || wallet.wallet_id} elevated style={{ width: 160 }}>
-                            <Text className="text-2xl mb-2">{wallet.icon || '🏦'}</Text>
-                            <Text className="text-txt-secondary text-xs">{wallet.name}</Text>
-                            <Text className="text-txt text-[17px] font-bold mt-1">
-                                {formatRupiah(wallet.balance)}
-                            </Text>
-                        </Card>
-                    ))}
-                </ScrollView>
+                {!loading && wallets.length === 0 ? (
+                    <TouchableOpacity
+                        onPress={() => setShowAddWallet(true)}
+                        activeOpacity={0.75}
+                        className="mb-6 rounded-2xl border-2 border-dashed border-primary/50 bg-primary/8 py-6 items-center justify-center"
+                        style={{
+                            shadowColor: Colors.primary,
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.15,
+                            shadowRadius: 10,
+                        }}
+                    >
+                        <View className="w-14 h-14 rounded-2xl bg-primary/20 items-center justify-center mb-3">
+                            <Ionicons name="wallet-outline" size={28} color={Colors.primary} />
+                        </View>
+                        <Text className="text-txt text-[15px] font-bold">Belum ada dompet</Text>
+                        <Text className="text-txt-secondary text-[13px] mt-1 mb-3 text-center px-4">
+                            Tambahkan dompet pertamamu untuk mulai mencatat keuangan
+                        </Text>
+                        <View
+                            className="flex-row items-center bg-primary rounded-xl px-5 py-2.5"
+                            style={{
+                                shadowColor: Colors.primary,
+                                shadowOffset: { width: 0, height: 4 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 8,
+                                elevation: 6,
+                            }}
+                        >
+                            <Ionicons name="add-circle-outline" size={18} color="white" />
+                            <Text className="text-white text-[14px] font-bold ml-2">Tambah Dompet</Text>
+                        </View>
+                    </TouchableOpacity>
+                ) : (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="mb-6"
+                        contentContainerStyle={{ gap: 12 }}
+                    >
+                        {wallets.map(wallet => (
+                            <Card key={wallet.id || wallet.wallet_id} elevated style={{ width: 160 }}>
+                                <Text className="text-2xl mb-2">{wallet.icon || '🏦'}</Text>
+                                <Text className="text-txt-secondary text-xs">{wallet.name}</Text>
+                                <Text className="text-txt text-[17px] font-bold mt-1">
+                                    {formatRupiah(wallet.balance)}
+                                </Text>
+                            </Card>
+                        ))}
+                    </ScrollView>
+                )}
 
                 {/* Expense Breakdown */}
                 <Text className="text-txt text-[17px] font-bold mb-3">Ringkasan Pengeluaran</Text>
@@ -184,6 +222,12 @@ export default function DashboardScreen() {
                     ))}
                 </Card>
             </ScrollView>
+
+            <AddWalletModal
+                visible={showAddWallet}
+                onClose={() => setShowAddWallet(false)}
+                onSuccess={() => fetchDashboardData()}
+            />
         </SafeAreaView>
     );
 }

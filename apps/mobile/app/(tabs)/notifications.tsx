@@ -1,14 +1,52 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { NotificationItem } from '@/src/components/NotificationItem';
-const INSIGHTS = [
-  { id: 1, type: "budget_alert", message: "Pengeluaran makanan bulan ini sudah 80% dari rata-rata.", isRead: false, createdAt: "2026-03-07T20:00:00Z" },
-  { id: 3, type: "savings_milestone", message: "Selamat! Anda berhasil menghemat Rp 1.2 juta dibanding bulan lalu.", isRead: true, createdAt: "2026-03-06T09:00:00Z" }
-];
+import { getInsights, markInsightAsRead } from '@/src/api/insights';
+import type { Insight } from '@/src/api/insights';
 
 export default function NotificationsScreen() {
-    const unreadCount = INSIGHTS.filter(i => !i.isRead).length;
+  const [insights, setInsights] = useState<Insight[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchInsights = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getInsights();
+      setInsights(data);
+    } catch (err) {
+      // Don't show error, treat empty insights as valid state
+      console.error("Error fetching insights:", err);
+      setInsights([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchInsights();
+    }, [])
+  );
+
+  const handleMarkAsRead = async (insightId: number) => {
+    try {
+      await markInsightAsRead(insightId);
+      // Update local state to reflect the change
+      setInsights((prevInsights) =>
+        prevInsights.map((insight) =>
+          insight.id === insightId ? { ...insight, isRead: true } : insight
+        )
+      );
+    } catch (err) {
+      console.error("Error marking insight as read:", err);
+    }
+  };
+
+  const unreadCount = insights.filter(i => !i.isRead).length;
 
     return (
         <SafeAreaView className="flex-1 bg-bg">
@@ -38,15 +76,28 @@ export default function NotificationsScreen() {
                     </View>
                 </View>
 
-                {INSIGHTS.map(insight => (
-                    <NotificationItem
-                        key={insight.id}
-                        type={insight.type}
-                        message={insight.message}
-                        isRead={insight.isRead}
-                        createdAt={insight.createdAt}
-                    />
-                ))}
+                {loading ? (
+                    <View className="flex-1 justify-center items-center py-10">
+                        <ActivityIndicator size="large" color="#6C5CE7" />
+                        <Text className="text-txt-secondary text-[13px] mt-3">Memuat notifikasi...</Text>
+                    </View>
+                ) : insights.length > 0 ? (
+                    insights.map(insight => (
+                        <NotificationItem
+                            key={insight.id}
+                            type={insight.type}
+                            message={insight.message}
+                            isRead={insight.isRead}
+                            createdAt={insight.createdAt}
+                        />
+                    ))
+                ) : (
+                    <View className="flex-1 justify-center items-center py-10">
+                        <Text className="text-txt-secondary text-[13px] text-center">
+                            Tidak ada notifikasi saat ini
+                        </Text>
+                    </View>
+                )}
             </ScrollView>
         </SafeAreaView>
     );
