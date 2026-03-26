@@ -2,8 +2,8 @@
 use api::{
     config, routes, services,
     utils::{
-        crypto_seeder::crypto_seeder, gold_seeder::gold_seeder, idx_stock_seeder::idx_stock_seeder,
-        usd_seeder::usd_seeder, user_seeder::user_seeder,
+        category_seeder::category_seeder, crypto_seeder::crypto_seeder, gold_seeder::gold_seeder,
+        idx_stock_seeder::idx_stock_seeder, usd_seeder::usd_seeder, user_seeder::user_seeder,
     },
 };
 use dotenvy::dotenv;
@@ -31,6 +31,10 @@ async fn main() {
 
     if let Err(e) = user_seeder().await {
         eprintln!("Gagal melakukan seeding user default: {}", e);
+    }
+
+    if let Err(e) = category_seeder().await {
+        eprintln!("Gagal melakukan seeding category default: {}", e);
     }
 
     let app_state = config::db::db_state().await;

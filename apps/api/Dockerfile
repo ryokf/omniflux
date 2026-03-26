@@ -30,3 +30,24 @@ EXPOSE 4000
 
 # Perintah default saat container dijalankan
 CMD ["api"]
+
+# Stage 2: Runtime (Image produksi yang sangat ringan)
+FROM debian:bookworm-slim
+
+# Install OpenSSL dan CA Certificates
+RUN apt-get update && apt-get install -y ca-certificates libssl3 && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# 👇 TAMBAHKAN BARIS INI UNTUK MENYALIN FILE CSV 👇
+COPY --from=builder /usr/src/app/src/data ./src/data
+
+# Salin binary dari stage builder ke stage runtime
+COPY --from=builder /usr/src/app/target/release/api /usr/local/bin/api
+COPY --from=builder /usr/src/app/target/release/migration /usr/local/bin/migration
+
+# Buka port 4000
+EXPOSE 4000
+
+# Perintah default saat container dijalankan
+CMD ["api"]

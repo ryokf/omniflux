@@ -1,3 +1,4 @@
+pub mod category_seeder;
 pub mod crypto_seeder;
 pub mod gold_seeder;
 pub mod idx_stock_seeder;

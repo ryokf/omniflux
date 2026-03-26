@@ -1,9 +1,6 @@
-use crate::{
-    config::db,
-    models::{asset, sea_orm_active_enums::AssetType},
-};
+use crate::{ config::db, models::{ asset, sea_orm_active_enums::AssetType } };
 use chrono::Utc;
-use sea_orm::{EntityTrait, PaginatorTrait, Set, prelude::Decimal};
+use sea_orm::{ ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, Set, prelude::Decimal };
 use serde::Deserialize;
 use std::error::Error;
 
@@ -20,7 +17,11 @@ pub async fn idx_stock_seeder() -> Result<(), Box<dyn Error>> {
     let db_conn = db::db_state().await;
 
     // 1. Cek apakah tabel asset sudah memiliki data agar tidak duplikat
-    let count = asset::Entity::find().count(&db_conn.db).await?;
+    let count = asset::Entity
+        ::find()
+        .filter(asset::Column::AssetType.eq(AssetType::Stock))
+        .count(&db_conn.db).await?;
+
     if count > 0 {
         println!("✅ Data saham sudah ada di database, melewati proses seeding.");
         return Ok(());
@@ -56,9 +57,7 @@ pub async fn idx_stock_seeder() -> Result<(), Box<dyn Error>> {
     // 4. Eksekusi Bulk Insert jika ada data
     if !assets_to_insert.is_empty() {
         // SeaORM insert_many sangat efisien untuk data dalam jumlah besar
-        asset::Entity::insert_many(assets_to_insert)
-            .exec(&db_conn.db)
-            .await?;
+        asset::Entity::insert_many(assets_to_insert).exec(&db_conn.db).await?;
 
         println!("🚀 Berhasil melakukan seeding saham Indonesia ke database!");
     }

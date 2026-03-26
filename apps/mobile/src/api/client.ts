@@ -5,7 +5,7 @@ import * as SecureStore from "expo-secure-store";
 // If you are using an Android emulator on the same machine, you can sometimes use '10.0.2.2'
 // If you are using an iOS simulator, 'localhost' or '127.0.0.1' might work
 // But for Expo Go on a physical phone, you MUST use your local network IP!
-export const BASE_URL = "http://192.168.1.4:4000/api/v1";
+export const BASE_URL = "http://13.212.23.160:4000/api/v1";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
