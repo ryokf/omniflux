@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  api:
+    # GANTI "username_dockerhub" DENGAN USERNAME DOCKER HUB KAMU
+    image: ryokf/omniflux-api:latest
+    container_name: omniflux_api
+    ports:
+      - "4000:4000"
+    environment:
+      # Koneksi DB mengarah ke service "db" (bukan 127.0.0.1)
+      - DATABASE_URL=mysql://root:root@db:3306/omniflux
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+
+  db:
+    image: mysql:8.0
+    container_name: omniflux_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=omniflux
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    restart: always
+
+volumes:
+  mysql_data:
