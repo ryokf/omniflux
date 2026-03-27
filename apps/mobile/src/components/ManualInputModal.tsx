@@ -131,7 +131,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     const [invAssetType, setInvAssetType] = useState('');
     const [invSymbol, setInvSymbol] = useState('');
     const [invQty, setInvQty] = useState('');
-    const [invPrice, setInvPrice] = useState('');
+
     const [invWallet, setInvWallet] = useState('');
 
     // Dynamic Lists
@@ -190,7 +190,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     const resetForm = () => {
         setCfWallet(''); setCfCategory(''); setCfAmount(''); setCfNote('');
         setInvType('buy'); setInvAssetType(''); setInvSymbol('');
-        setInvQty(''); setInvPrice(''); setInvWallet('');
+        setInvQty(''); setInvWallet('');
     };
 
     const handleSave = async () => {
@@ -213,17 +213,17 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                     transaction_type: isExpense ? 'expense' : 'income'
                 };
             } else {
-                if (!invWallet || !invQty || !invPrice) {
+                if (!invWallet || !invQty) {
                     Alert.alert('Error', 'Harap isi semua data investasi.');
                     return;
                 }
-                const totalVal = Number(invQty) * Number(invPrice);
                 const invCat = categories.find(c => c.name?.toLowerCase().includes('investasi'))?.id || categories[0]?.id || 1;
                 
                 payload = {
                     wallet_id: Number(invWallet),
                     category_id: Number(invCat),
-                    amount: invType === 'buy' ? -Math.abs(totalVal) : Math.abs(totalVal),
+                    quantity: Number(invQty),
+                    asset_id: invSymbol ? Number(invSymbol) : undefined,
                     description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${invAssetType}`,
                     transaction_type: invType === 'buy' ? 'expense' : 'income'
                 };
@@ -380,19 +380,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                                         onChangeText={setInvQty}
                                     />
                                 </View>
-                                <View className="mb-4">
-                                    <Text className="text-txt-secondary text-xs font-semibold mb-1.5">
-                                        Harga {invType === 'buy' ? 'Beli' : 'Jual'} (Rp)
-                                    </Text>
-                                    <TextInput
-                                        className="bg-input-bg rounded-xl p-3.5 text-txt text-[15px] border border-surface-border"
-                                        placeholder="0"
-                                        placeholderTextColor={Colors.textMuted}
-                                        keyboardType="numeric"
-                                        value={invPrice}
-                                        onChangeText={setInvPrice}
-                                    />
-                                </View>
+
                                 <Dropdown label="Sumber Dana" options={walletOptions} selected={invWallet} onSelect={setInvWallet} />
                             </>
                         )}
