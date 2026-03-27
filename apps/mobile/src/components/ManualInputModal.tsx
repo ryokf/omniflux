@@ -206,11 +206,11 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                 const finalAmount = isExpense ? -Math.abs(amountNum) : Math.abs(amountNum);
                 
                 payload = {
-                    walletId: Number(cfWallet),
-                    categoryId: Number(cfCategory),
+                    wallet_id: Number(cfWallet),
+                    category_id: Number(cfCategory),
                     amount: finalAmount,
                     description: cfNote || 'Transaksi Manual',
-                    date: new Date().toISOString()
+                    transaction_type: isExpense ? 'expense' : 'income'
                 };
             } else {
                 if (!invWallet || !invQty || !invPrice) {
@@ -218,11 +218,14 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                     return;
                 }
                 const totalVal = Number(invQty) * Number(invPrice);
+                const invCat = categories.find(c => c.name?.toLowerCase().includes('investasi'))?.id || categories[0]?.id || 1;
+                
                 payload = {
-                    walletId: Number(invWallet),
+                    wallet_id: Number(invWallet),
+                    category_id: Number(invCat),
                     amount: invType === 'buy' ? -Math.abs(totalVal) : Math.abs(totalVal),
                     description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${invAssetType}`,
-                    date: new Date().toISOString()
+                    transaction_type: invType === 'buy' ? 'expense' : 'income'
                 };
             }
 

@@ -1,6 +1,5 @@
 {
-  "rust-analyzer.linkedProjects": [
-    "./apps/api/Cargo.toml"
-  ],
-  "rust-analyzer.cargo.buildScripts.enable": true
+  "rust-analyzer.linkedProjects": ["./apps/api/Cargo.toml"],
+  "rust-analyzer.cargo.buildScripts.enable": true,
+  "wake.compiler.solc.remappings": []
 }
