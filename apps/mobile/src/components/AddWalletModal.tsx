@@ -9,9 +9,9 @@ import {
     KeyboardAvoidingView,
     Platform,
     Alert,
-    ScrollView,
     DeviceEventEmitter,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
 import { apiClient } from '@/src/api/client';
@@ -88,11 +88,13 @@ export function AddWalletModal({ visible, onClose, onSuccess }: AddWalletModalPr
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView
-                    className="px-5"
+                <KeyboardAwareScrollView
+                    style={{ paddingHorizontal: 20 }}
                     contentContainerStyle={{ paddingBottom: 40 }}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
+                    enableOnAndroid={true}
+                    extraScrollHeight={20}
                 >
                     {/* Icon Picker */}
                     <Text className="text-txt-secondary text-xs font-semibold mb-2">Pilih Ikon</Text>
@@ -147,7 +149,7 @@ export function AddWalletModal({ visible, onClose, onSuccess }: AddWalletModalPr
                             {loading ? 'Menyimpan...' : '🏦 Buat Dompet'}
                         </Text>
                     </TouchableOpacity>
-                </ScrollView>
+                </KeyboardAwareScrollView>
             </KeyboardAvoidingView>
         </Modal>
     );

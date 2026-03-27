@@ -5,12 +5,12 @@ import {
     Modal,
     TouchableOpacity,
     TextInput,
-    ScrollView,
     Pressable,
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
 import { formatRupiah } from '@/src/utils/format';
@@ -246,11 +246,13 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
                             <Text className="text-txt text-sm italic">"{rawInput}"</Text>
                         </View>
 
-                        <ScrollView
-                            className="px-5"
+                        <KeyboardAwareScrollView
+                            style={{ paddingHorizontal: 20 }}
                             contentContainerStyle={{ paddingBottom: 40 }}
                             showsVerticalScrollIndicator={false}
                             keyboardShouldPersistTaps="handled"
+                            enableOnAndroid={true}
+                            extraScrollHeight={20}
                         >
                             {/* Amount */}
                             <View className="mb-4">
@@ -314,7 +316,7 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
                             <TouchableOpacity onPress={onClose} className="items-center mt-3 py-2">
                                 <Text className="text-txt-muted text-sm">Batalkan</Text>
                             </TouchableOpacity>
-                        </ScrollView>
+                        </KeyboardAwareScrollView>
                     </>
                 )}
             </KeyboardAvoidingView>

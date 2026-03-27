@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
@@ -68,10 +69,13 @@ export default function TransactionsScreen() {
 
     return (
         <SafeAreaView className="flex-1 bg-bg">
-            <ScrollView
-                className="flex-1"
+            <KeyboardAwareScrollView
+                style={{ flex: 1 }}
                 contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                enableOnAndroid={true}
+                extraScrollHeight={Platform.OS === 'ios' ? 20 : 0}
             >
                 {/* Header */}
                 <Text className="text-txt text-2xl font-extrabold mb-5">Transaksi</Text>
@@ -160,7 +164,7 @@ export default function TransactionsScreen() {
                         ))
                     )}
                 </Card>
-            </ScrollView>
+            </KeyboardAwareScrollView>
 
             <ManualInputModal visible={showManual} onClose={() => { setShowManual(false); loadData(); }} />
             <AIConfirmModal

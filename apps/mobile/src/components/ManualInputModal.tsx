@@ -5,7 +5,6 @@ import {
     Modal,
     TouchableOpacity,
     TextInput,
-    ScrollView,
     Pressable,
     KeyboardAvoidingView,
     Platform,
@@ -13,6 +12,7 @@ import {
     ActivityIndicator,
     DeviceEventEmitter,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
 import { apiClient } from '@/src/api/client';
@@ -323,11 +323,13 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                         </TouchableOpacity>
                     </View>
 
-                    <ScrollView
-                        className="px-5"
+                    <KeyboardAwareScrollView
+                        style={{ paddingHorizontal: 20 }}
                         contentContainerStyle={{ paddingBottom: 40 }}
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"
+                        enableOnAndroid={true}
+                        extraScrollHeight={20}
                     >
                         {activeTab === 'cashflow' ? (
                             <>
@@ -411,7 +413,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                                 {activeTab === 'cashflow' ? '💾 Simpan Transaksi' : `💾 Simpan ${invType === 'buy' ? 'Pembelian' : 'Penjualan'}`}
                             </Text>
                         </TouchableOpacity>
-                    </ScrollView>
+                    </KeyboardAwareScrollView>
                     </>
                 )}
             </KeyboardAvoidingView>
