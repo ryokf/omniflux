@@ -69,7 +69,9 @@ pub async fn run_analytic_assistant(
         for tx in user_txs {
             if let Some(date) = tx.transaction_date {
                 if date.year() == current_year && date.month() == current_month {
-                    total_expense += tx.amount;
+                    if tx.amount.is_sign_negative() {
+                        total_expense += tx.amount.abs();
+                    }
                 }
             }
         }

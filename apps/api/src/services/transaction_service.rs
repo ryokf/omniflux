@@ -30,10 +30,10 @@ pub async fn create_transaction(
 
     match data.transaction_type {
         TransactionType::Income => {
-            current_balance += data.amount;
+            current_balance += data.amount.abs();
         }
         TransactionType::Expense => {
-            current_balance -= data.amount;
+            current_balance -= data.amount.abs();
         }
     }
 
