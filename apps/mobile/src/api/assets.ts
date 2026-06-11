@@ -10,6 +10,7 @@ export interface Asset {
   totalValue: number;
   avgBuyPrice?: number;
   pnlPercent?: number;
+  icon?: string;
 }
 
 export interface GetAssetsResponse {

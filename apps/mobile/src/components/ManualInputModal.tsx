@@ -18,6 +18,7 @@ import { Colors } from '@/src/constants/colors';
 import { apiClient } from '@/src/api/client';
 import * as SecureStore from 'expo-secure-store';
 import { AddWalletModal } from '@/src/components/AddWalletModal';
+import { formatRupiah } from '@/src/utils/format';
 
 interface ManualInputModalProps {
     visible: boolean;
@@ -133,6 +134,8 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     const [invQty, setInvQty] = useState('');
 
     const [invWallet, setInvWallet] = useState('');
+    const [selectedAssetPrice, setSelectedAssetPrice] = useState<number | null>(null);
+    const [fetchingPrice, setFetchingPrice] = useState(false);
 
     // Dynamic Lists
     const [wallets, setWallets] = useState<any[]>([]);
@@ -172,6 +175,39 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
         loadOptions();
     }, [visible]);
 
+    useEffect(() => {
+        if (!invSymbol) {
+            setSelectedAssetPrice(null);
+            return;
+        }
+        
+        const selectedAsset = assets.find(a => String(a.id) === invSymbol);
+        if (!selectedAsset) return;
+
+        const ticker = selectedAsset.ticker_symbol || selectedAsset.tickerSymbol;
+        if (!ticker) return;
+
+        const fetchPrice = async () => {
+            try {
+                setFetchingPrice(true);
+                const res = await apiClient.get(`/assets/quote/${ticker}`);
+                const priceVal = res.data?.data;
+                if (priceVal !== undefined && priceVal !== null) {
+                    setSelectedAssetPrice(Number(priceVal));
+                } else {
+                    setSelectedAssetPrice(Number(selectedAsset.current_price || selectedAsset.currentPrice || 0));
+                }
+            } catch (err) {
+                console.error("Failed to fetch asset quote", err);
+                setSelectedAssetPrice(Number(selectedAsset.current_price || selectedAsset.currentPrice || 0));
+            } finally {
+                setFetchingPrice(false);
+            }
+        };
+
+        fetchPrice();
+    }, [invSymbol, assets]);
+
     const walletOptions = wallets.map(w => ({ value: String(w.id || w.wallet_id), label: `${w.icon || '🏦'} ${w.name}` }));
     const categoryOptions = categories.map(c => ({ value: String(c.id), label: `${c.icon || '📌'} ${c.name}` }));
     const assetTypeOptions = [
@@ -191,11 +227,11 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
         setCfWallet(''); setCfCategory(''); setCfAmount(''); setCfNote('');
         setInvType('buy'); setInvAssetType(''); setInvSymbol('');
         setInvQty(''); setInvWallet('');
+        setSelectedAssetPrice(null);
     };
 
     const handleSave = async () => {
         try {
-            let payload: any = {};
             if (activeTab === 'cashflow') {
                 if (!cfWallet || !cfCategory || !cfAmount) {
                     Alert.alert('Error', 'Harap isi dompet, kategori, dan nominal.');
@@ -205,31 +241,73 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                 const amountNum = Number(cfAmount);
                 const finalAmount = isExpense ? -Math.abs(amountNum) : Math.abs(amountNum);
                 
-                payload = {
+                const payload = {
                     wallet_id: Number(cfWallet),
                     category_id: Number(cfCategory),
                     amount: finalAmount,
                     description: cfNote || 'Transaksi Manual',
                     transaction_type: isExpense ? 'expense' : 'income'
                 };
+
+                await apiClient.post('/transactions', payload);
             } else {
-                if (!invWallet || !invQty) {
-                    Alert.alert('Error', 'Harap isi semua data investasi.');
+                if (!invWallet || !invQty || !invSymbol) {
+                    Alert.alert('Error', 'Harap isi semua data investasi (termasuk simbol aset).');
                     return;
                 }
+                const selectedAsset = assets.find(a => String(a.id) === invSymbol);
+                if (!selectedAsset) {
+                    Alert.alert('Error', 'Aset tidak ditemukan.');
+                    return;
+                }
+
+                let price = selectedAssetPrice !== null ? selectedAssetPrice : Number(selectedAsset.current_price || selectedAsset.currentPrice || 0);
+                
+                if (price === 0) {
+                    const ticker = selectedAsset.ticker_symbol || selectedAsset.tickerSymbol;
+                    if (ticker) {
+                        try {
+                            const res = await apiClient.get(`/assets/quote/${ticker}`);
+                            const priceVal = res.data?.data;
+                            if (priceVal !== undefined && priceVal !== null) {
+                                price = Number(priceVal);
+                            }
+                        } catch (err) {
+                            console.error("Failed to fetch asset quote on save", err);
+                        }
+                    }
+                }
+
+                const amountNum = Number(invQty) * price;
+                const finalAmount = invType === 'buy' ? -Math.abs(amountNum) : Math.abs(amountNum);
                 const invCat = categories.find(c => c.name?.toLowerCase().includes('investasi'))?.id || categories[0]?.id || 1;
                 
-                payload = {
+                const transactionPayload = {
                     wallet_id: Number(invWallet),
                     category_id: Number(invCat),
-                    quantity: Number(invQty),
-                    asset_id: invSymbol ? Number(invSymbol) : undefined,
-                    description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${invAssetType}`,
+                    amount: finalAmount,
+                    description: `${invType === 'buy' ? 'Beli' : 'Jual'} ${selectedAsset.name || invAssetType}`,
                     transaction_type: invType === 'buy' ? 'expense' : 'income'
                 };
-            }
 
-            await apiClient.post('/transactions', payload);
+                const strUserId = await SecureStore.getItemAsync('userId');
+                if (!strUserId) {
+                    Alert.alert('Error', 'User ID tidak ditemukan. Harap masuk kembali.');
+                    return;
+                }
+
+                const portfolioPayload = {
+                    user_id: Number(strUserId),
+                    asset_id: Number(invSymbol),
+                    quantity: invType === 'buy' ? Number(invQty) : -Number(invQty)
+                };
+
+                // Catat transaksi keuangan (mengubah saldo dompet)
+                await apiClient.post('/transactions', transactionPayload);
+
+                // Tambahkan/kurangi aset ke portfolio
+                await apiClient.post('/portfolios', portfolioPayload);
+            }
             
             DeviceEventEmitter.emit('refreshDashboard');
             
@@ -369,6 +447,30 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                                 {invAssetType !== '' && (
                                     <Dropdown label="Simbol Aset" options={symbolOptions} selected={invSymbol} onSelect={setInvSymbol} />
                                 )}
+                                
+                                {invSymbol !== '' && (
+                                     <View className="mb-4 bg-primary/10 border border-primary/20 rounded-xl p-3.5 flex-row justify-between items-center">
+                                         <View>
+                                             <Text className="text-txt-secondary text-xs font-semibold">Harga Per Unit</Text>
+                                             {fetchingPrice ? (
+                                                 <ActivityIndicator size="small" color={Colors.primary} className="mt-1" style={{ alignSelf: 'flex-start' }} />
+                                             ) : (
+                                                 <Text className="text-txt text-base font-bold mt-0.5">
+                                                     {selectedAssetPrice !== null ? formatRupiah(selectedAssetPrice) : 'Rp 0'}
+                                                 </Text>
+                                             )}
+                                         </View>
+                                         {invQty !== '' && selectedAssetPrice !== null && !fetchingPrice && (
+                                             <View className="items-end">
+                                                 <Text className="text-txt-secondary text-xs font-semibold">Total Estimasi</Text>
+                                                 <Text className="text-primary text-base font-extrabold mt-0.5">
+                                                     {formatRupiah(Number(invQty) * selectedAssetPrice)}
+                                                 </Text>
+                                             </View>
+                                         )}
+                                     </View>
+                                 )}
+
                                 <View className="mb-4">
                                     <Text className="text-txt-secondary text-xs font-semibold mb-1.5">Jumlah (Lot / Koin)</Text>
                                     <TextInput

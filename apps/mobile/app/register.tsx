@@ -12,51 +12,52 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useRouter } from 'expo-router';
 import { Colors } from '@/src/constants/colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as SecureStore from 'expo-secure-store';
 import { apiClient } from '@/src/api/client';
 
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Harap isi email dan kata sandi');
+  const handleRegister = async () => {
+    if (!email || !password || !confirmPassword) {
+      Alert.alert('Error', 'Harap isi semua kolom');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Kata sandi tidak cocok');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'Kata sandi minimal 6 karakter');
       return;
     }
 
     setLoading(true);
     try {
-      // Aksi 1: Kirim request POST ke rute Login
-      const response = await apiClient.post('/users/login', { email, password });
+      await apiClient.post('/users/register', { email, password });
 
-      const token = response.data?.data?.token || response.data?.token;
-      if (token) {
-        // Parse JWT to get user ID
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const userId = payload.sub;
-          if (userId) {
-            await SecureStore.setItemAsync('userId', String(userId));
-          }
-        } catch (e) {
-          console.warn('Failed to parse JWT payload', e);
-        }
-
-        // Aksi 2: Penyimpanan Aman
-        await SecureStore.setItemAsync('userToken', token);
-
-        // Aksi 3: Perubahan State / Navigasi
-        router.replace('/(tabs)');
-      } else {
-        Alert.alert('Login Gagal', 'Token tidak diterima dari server');
-      }
+      Alert.alert(
+        'Berhasil',
+        'Akun berhasil dibuat! Silakan masuk.',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ],
+      );
     } catch (error: any) {
-      console.error('Login Error:', error.response?.data || error.message);
-      Alert.alert('Login Gagal', error.response?.data?.message || 'Gagal tersambung ke server. Pastikan IP lokal benar dan server menyala.');
+      console.error('Register Error:', error.response?.data || error.message);
+      Alert.alert(
+        'Pendaftaran Gagal',
+        error.response?.data?.message || 'Gagal mendaftar. Silakan coba lagi.',
+      );
     } finally {
       setLoading(false);
     }
@@ -85,10 +86,10 @@ export default function LoginScreen() {
             <Text className="text-[32px] text-white font-extrabold">O</Text>
           </View>
           <Text className="text-[28px] font-extrabold text-txt tracking-wide">
-            OmniFlux
+            Buat Akun
           </Text>
           <Text className="text-txt-secondary text-sm mt-1.5">
-            Assets Aggregator
+            Daftar untuk mulai menggunakan OmniFlux
           </Text>
         </View>
 
@@ -106,11 +107,11 @@ export default function LoginScreen() {
           />
         </View>
 
-        <View className="mb-8">
+        <View className="mb-6">
           <Text className="text-txt-secondary text-[13px] mb-2 font-medium">Kata Sandi</Text>
           <TextInput
             className="bg-input-bg rounded-xl p-4 text-txt text-base border border-surface-border"
-            placeholder="••••••••"
+            placeholder="Minimal 6 karakter"
             placeholderTextColor={Colors.textMuted}
             secureTextEntry
             value={password}
@@ -118,9 +119,21 @@ export default function LoginScreen() {
           />
         </View>
 
-        {/* Login Button */}
+        <View className="mb-8">
+          <Text className="text-txt-secondary text-[13px] mb-2 font-medium">Konfirmasi Kata Sandi</Text>
+          <TextInput
+            className="bg-input-bg rounded-xl p-4 text-txt text-base border border-surface-border"
+            placeholder="Ulangi kata sandi"
+            placeholderTextColor={Colors.textMuted}
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+        </View>
+
+        {/* Register Button */}
         <TouchableOpacity
-          onPress={handleLogin}
+          onPress={handleRegister}
           activeOpacity={0.85}
           disabled={loading}
           className="bg-primary rounded-[14px] py-[17px] items-center"
@@ -135,14 +148,15 @@ export default function LoginScreen() {
           {loading ? (
             <ActivityIndicator color={Colors.white} />
           ) : (
-            <Text className="text-white text-[17px] font-bold">Masuk</Text>
+            <Text className="text-white text-[17px] font-bold">Daftar</Text>
           )}
         </TouchableOpacity>
 
+        {/* Login Link */}
         <View className="flex-row justify-center mt-6">
-          <Text className="text-txt-secondary text-sm">Belum punya akun? </Text>
-          <TouchableOpacity onPress={() => router.push('/register')}>
-            <Text className="text-primary text-sm font-semibold">Daftar</Text>
+          <Text className="text-txt-secondary text-sm">Sudah punya akun? </Text>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text className="text-primary text-sm font-semibold">Masuk</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
