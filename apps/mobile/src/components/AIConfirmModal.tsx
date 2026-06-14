@@ -14,13 +14,9 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/src/constants/colors';
 import { formatRupiah } from '@/src/utils/format';
-
-const WALLETS = [{ id: 1, name: "BCA Utama", balance: 12500000, icon: "🏦" }];
-const CATEGORIES = [
-  { id: 1, name: "Makanan", type: "expense" as const, icon: "🍔" },
-  { id: 5, name: "Belanja", type: "expense" as const, icon: "🛍️" },
-  { id: 6, name: "Gaji", type: "income" as const, icon: "💰" }
-];
+import { apiClient } from '@/src/api/client';
+import * as SecureStore from 'expo-secure-store';
+import { AddWalletModal } from '@/src/components/AddWalletModal';
 
 interface AIExtraction {
     amount: number;
@@ -145,8 +141,42 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
     const [description, setDescription] = useState('');
     const [confidence, setConfidence] = useState(0);
 
-    const walletOptions = WALLETS.map(w => ({ value: String(w.id), label: `${w.icon} ${w.name}` }));
-    const categoryOptions = CATEGORIES.map(c => ({ value: String(c.id), label: `${c.icon} ${c.name}` }));
+    // Dynamic lists from API
+    const [wallets, setWallets] = useState<any[]>([]);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [optionsLoading, setOptionsLoading] = useState(false);
+    const [showAddWallet, setShowAddWallet] = useState(false);
+
+    const loadOptions = async () => {
+        try {
+            setOptionsLoading(true);
+            const strUserId = await SecureStore.getItemAsync('userId');
+            if (!strUserId) return;
+
+            const [wRes, cRes] = await Promise.all([
+                apiClient.get(`/wallets/${strUserId}`),
+                apiClient.get('/categories'),
+            ]);
+
+            const wlts = Array.isArray(wRes.data?.data) ? wRes.data.data : (Array.isArray(wRes.data) ? wRes.data : []);
+            const cats = Array.isArray(cRes.data?.data) ? cRes.data.data : (Array.isArray(cRes.data) ? cRes.data : []);
+
+            setWallets(wlts);
+            setCategories(cats);
+        } catch (e: any) {
+            console.error('Failed to load AI modal options', e.response?.data || e.message);
+        } finally {
+            setOptionsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!visible) return;
+        loadOptions();
+    }, [visible]);
+
+    const walletOptions = wallets.map(w => ({ value: String(w.id || w.wallet_id), label: `${w.icon || '🏦'} ${w.name}` }));
+    const categoryOptions = categories.map(c => ({ value: String(c.id), label: `${c.icon || '📌'} ${c.name}` }));
 
     // Simulate AI processing when modal opens
     useEffect(() => {
@@ -157,14 +187,19 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
                 setExtraction(result);
                 setAmount(String(result.amount));
                 setCategoryId(String(result.categoryId));
-                setWalletId(String(result.walletId));
+                // Auto-select first wallet if available
+                if (wallets.length > 0) {
+                    setWalletId(String(wallets[0].id || wallets[0].wallet_id));
+                } else {
+                    setWalletId('');
+                }
                 setDescription(result.description);
                 setConfidence(result.confidence);
                 setLoading(false);
             }, 1800); // Simulate AI latency
             return () => clearTimeout(timeout);
         }
-    }, [visible, rawInput]);
+    }, [visible, rawInput, wallets]);
 
     const handleConfirm = () => {
         onConfirm({
@@ -176,9 +211,11 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
         });
     };
 
-    const category = CATEGORIES.find(c => c.id === parseInt(categoryId));
+    const category = categories.find(c => String(c.id) === categoryId);
+    const hasNoWallet = !optionsLoading && wallets.length === 0;
 
     return (
+        <>
         <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
             <Pressable className="flex-1 bg-black/55" onPress={onClose} />
             <KeyboardAvoidingView
@@ -190,16 +227,51 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
                     <View className="w-10 h-1 rounded-sm bg-txt-muted" />
                 </View>
 
-                {loading ? (
+                {optionsLoading || loading ? (
                     /* ============ LOADING STATE ============ */
                     <View className="items-center justify-center py-20 px-5">
                         <View className="w-16 h-16 rounded-2xl bg-primary/20 justify-center items-center mb-5">
                             <ActivityIndicator color={Colors.primary} size="large" />
                         </View>
-                        <Text className="text-txt text-lg font-bold mb-2">Menganalisis...</Text>
-                        <Text className="text-txt-secondary text-sm text-center">
-                            AI sedang mengekstrak data dari{'\n'}"{rawInput}"
+                        <Text className="text-txt text-lg font-bold mb-2">
+                            {optionsLoading ? 'Memuat data...' : 'Menganalisis...'}
                         </Text>
+                        <Text className="text-txt-secondary text-sm text-center">
+                            {optionsLoading
+                                ? 'Mengambil data dompet dan kategori'
+                                : `AI sedang mengekstrak data dari\n"${rawInput}"`}
+                        </Text>
+                    </View>
+                ) : hasNoWallet ? (
+                    /* ============ WALLET GUARD ============ */
+                    <View className="items-center justify-center py-10 px-8">
+                        <View className="w-20 h-20 rounded-3xl bg-primary/15 items-center justify-center mb-4">
+                            <Ionicons name="wallet-outline" size={40} color={Colors.primary} />
+                        </View>
+                        <Text className="text-txt text-[17px] font-extrabold text-center mb-2">
+                            Dompet Diperlukan
+                        </Text>
+                        <Text className="text-txt-secondary text-[13px] text-center leading-5 mb-6">
+                            Kamu belum memiliki dompet. Buat dompet terlebih dahulu untuk mulai mencatat pemasukan, pengeluaran, atau investasi.
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => setShowAddWallet(true)}
+                            activeOpacity={0.85}
+                            className="flex-row items-center bg-primary rounded-xl px-6 py-3.5"
+                            style={{
+                                shadowColor: Colors.primary,
+                                shadowOffset: { width: 0, height: 5 },
+                                shadowOpacity: 0.35,
+                                shadowRadius: 10,
+                                elevation: 7,
+                            }}
+                        >
+                            <Ionicons name="add-circle-outline" size={20} color="white" />
+                            <Text className="text-white font-bold text-[15px] ml-2">Buat Dompet Sekarang</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={onClose} className="mt-4 py-2">
+                            <Text className="text-txt-muted text-[13px]">Nanti saja</Text>
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     /* ============ PRE-FILLED FORM ============ */
@@ -321,5 +393,13 @@ export function AIConfirmModal({ visible, rawInput, onClose, onConfirm }: AIConf
                 )}
             </KeyboardAvoidingView>
         </Modal>
+
+        <AddWalletModal
+            visible={showAddWallet}
+            onClose={() => setShowAddWallet(false)}
+            onSuccess={() => loadOptions()}
+        />
+        </>
     );
 }
+

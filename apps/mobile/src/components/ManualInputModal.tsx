@@ -141,6 +141,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
     const [wallets, setWallets] = useState<any[]>([]);
     const [categories, setCategories] = useState<any[]>([]);
     const [assets, setAssets] = useState<any[]>([]);
+    const [portfolios, setPortfolios] = useState<any[]>([]);
     const [modalLoading, setModalLoading] = useState(false);
     const [showAddWallet, setShowAddWallet] = useState(false);
 
@@ -150,19 +151,22 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
             const strUserId = await SecureStore.getItemAsync('userId');
             if (!strUserId) return;
 
-            const [wRes, cRes, aRes] = await Promise.all([
+            const [wRes, cRes, aRes, pRes] = await Promise.all([
                 apiClient.get(`/wallets/${strUserId}`),
                 apiClient.get('/categories'),
-                apiClient.get('/assets')
+                apiClient.get('/assets'),
+                apiClient.get(`/portfolios/user/${strUserId}`)
             ]);
 
             const wlts = Array.isArray(wRes.data?.data) ? wRes.data.data : (Array.isArray(wRes.data) ? wRes.data : []);
             const cats = Array.isArray(cRes.data?.data) ? cRes.data.data : (Array.isArray(cRes.data) ? cRes.data : []);
             const asts = Array.isArray(aRes.data?.data) ? aRes.data.data : (Array.isArray(aRes.data) ? aRes.data : []);
+            const ports = Array.isArray(pRes.data?.data) ? pRes.data.data : (Array.isArray(pRes.data) ? pRes.data : []);
 
             setWallets(wlts);
             setCategories(cats);
             setAssets(asts);
+            setPortfolios(ports);
         } catch (e: any) {
             console.error('Failed to load modal options', e.response?.data || e.message);
         } finally {
@@ -210,18 +214,46 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
 
     const walletOptions = wallets.map(w => ({ value: String(w.id || w.wallet_id), label: `${w.icon || '🏦'} ${w.name}` }));
     const categoryOptions = categories.map(c => ({ value: String(c.id), label: `${c.icon || '📌'} ${c.name}` }));
-    const assetTypeOptions = [
+    // Asset IDs owned by the user (quantity > 0)
+    const ownedAssetIds = portfolios
+        .filter(p => Number(p.quantity) > 0)
+        .map(p => p.asset_id ?? p.assetId);
+
+    const allAssetTypeOptions = [
         { value: 'Crypto', label: '₿ Kripto' },
         { value: 'Stock', label: '📊 Saham' },
         { value: 'Mutual Fund', label: '📦 Reksa Dana' },
     ];
+
+    // When selling, only show asset types the user actually owns
+    const assetTypeOptions = invType === 'sell'
+        ? allAssetTypeOptions.filter(opt => {
+            return assets.some(a =>
+                (a.asset_type === opt.value || a.assetType === opt.value) &&
+                ownedAssetIds.includes(a.id)
+            );
+        })
+        : allAssetTypeOptions;
     
     const symbolOptions = assets
-        .filter(a => a.asset_type === invAssetType || a.assetType === invAssetType)
-        .map(a => ({
-            value: String(a.id),
-            label: `${a.ticker_symbol || a.tickerSymbol} — ${a.name}`,
-        }));
+        .filter(a => {
+            const matchesType = a.asset_type === invAssetType || a.assetType === invAssetType;
+            if (!matchesType) return false;
+            // When selling, only show assets the user owns
+            if (invType === 'sell') {
+                return ownedAssetIds.includes(a.id);
+            }
+            return true;
+        })
+        .map(a => {
+            const portfolio = portfolios.find(p => (p.asset_id ?? p.assetId) === a.id);
+            const qty = portfolio ? Number(portfolio.quantity) : 0;
+            const baseLabel = `${a.ticker_symbol || a.tickerSymbol} — ${a.name}`;
+            return {
+                value: String(a.id),
+                label: invType === 'sell' ? `${baseLabel} (${qty} unit)` : baseLabel,
+            };
+        });
 
     const resetForm = () => {
         setCfWallet(''); setCfCategory(''); setCfAmount(''); setCfNote('');
@@ -259,6 +291,19 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                 if (!selectedAsset) {
                     Alert.alert('Error', 'Aset tidak ditemukan.');
                     return;
+                }
+
+                // Validate sell quantity does not exceed owned quantity
+                if (invType === 'sell') {
+                    const portfolio = portfolios.find(p => (p.asset_id ?? p.assetId) === selectedAsset.id);
+                    const ownedQty = portfolio ? Number(portfolio.quantity) : 0;
+                    if (Number(invQty) > ownedQty) {
+                        Alert.alert(
+                            'Jumlah Melebihi Kepemilikan',
+                            `Kamu hanya memiliki ${ownedQty} unit ${selectedAsset.ticker_symbol || selectedAsset.tickerSymbol || selectedAsset.name}. Tidak bisa menjual ${invQty} unit.`
+                        );
+                        return;
+                    }
                 }
 
                 let price = selectedAssetPrice !== null ? selectedAssetPrice : Number(selectedAsset.current_price || selectedAsset.currentPrice || 0);
@@ -437,7 +482,7 @@ export function ManualInputModal({ visible, onClose }: ManualInputModalProps) {
                             </>
                         ) : (
                             <>
-                                <ToggleButton value={invType} onChange={setInvType} />
+                                <ToggleButton value={invType} onChange={(v) => { setInvType(v); setInvAssetType(''); setInvSymbol(''); }} />
                                 <Dropdown
                                     label="Jenis Aset"
                                     options={assetTypeOptions}
