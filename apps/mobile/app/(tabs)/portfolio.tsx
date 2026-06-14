@@ -4,10 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
 import { Card } from '@/src/components/Card';
 import { AssetCard } from '@/src/components/AssetCard';
+import { InvestmentChart } from '@/src/components/InvestmentChart';
 import { formatRupiah } from '@/src/utils/format';
 import { getAssets } from '@/src/api/assets';
-import { getNetWorth } from '@/src/api/portfolios';
 import { getWallets } from '@/src/api/wallets';
+import { apiClient } from '@/src/api/client';
 import type { Asset } from '@/src/api/assets';
 
 const ASSET_TYPE_ICONS: Record<string, string> = {
@@ -27,6 +28,8 @@ export default function PortfolioScreen() {
   }>({ totalNetWorth: 0, cashTotal: 0, investmentTotal: 0 });
   
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [portfolioDetails, setPortfolioDetails] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,18 +38,31 @@ export default function PortfolioScreen() {
       setLoading(true);
       setError(null);
       
-      // Fetch net worth and assets in parallel
-      const [netWorthRes, assetsRes, walletsRes] = await Promise.all([
-        getNetWorth(),
+      // Fetch net worth, assets, wallets, and transactions in parallel
+      const [netWorthRes, assetsRes, walletsRes, txRes] = await Promise.all([
+        apiClient.get('/portfolios/net-worth'),
         getAssets(),
         getWallets(),
+        apiClient.get('/transactions'),
       ]);
 
+      const nwData = netWorthRes.data?.data || netWorthRes.data || {};
+      const cashBalance = Number(nwData.cashBalance || 0);
+      const investmentsValue = Number(nwData.totalInvestmentsValue || 0);
+      const totalNW = Number(nwData.totalNetWorth || 0);
+      const details = Array.isArray(nwData.portfolioDetails) ? nwData.portfolioDetails : [];
+
       setNetWorthData({
-        totalNetWorth: netWorthRes.totalNetWorth || 0,
-        cashTotal: netWorthRes.cashTotal || walletsRes.reduce((s, w) => s + (w.balance || 0), 0) || 0,
-        investmentTotal: netWorthRes.investmentTotal || 0,
+        totalNetWorth: totalNW || (cashBalance + investmentsValue),
+        cashTotal: cashBalance || walletsRes.reduce((s, w) => s + (w.balance || 0), 0) || 0,
+        investmentTotal: investmentsValue || 0,
       });
+
+      setPortfolioDetails(details);
+      
+      // Parse transactions
+      const txs = Array.isArray(txRes.data?.data) ? txRes.data.data : (Array.isArray(txRes.data) ? txRes.data : []);
+      setTransactions(txs);
       
       // Filter assets and add icons
       const assetsWithIcons = assetsRes.map((asset) => ({
@@ -119,6 +135,14 @@ export default function PortfolioScreen() {
                                 </View>
                             </View>
                         </Card>
+
+                        {/* Investment Chart */}
+                        {(portfolioDetails.length > 0 || transactions.length > 0) && (
+                            <InvestmentChart
+                                portfolioDetails={portfolioDetails}
+                                transactions={transactions}
+                            />
+                        )}
 
                         {/* Assets by Type */}
                         {assetTypes.map(type => {
