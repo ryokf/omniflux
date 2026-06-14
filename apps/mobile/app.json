@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "OmniFlux",
+    "slug": "omniflux-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
@@ -13,14 +13,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.ryokf.mobile"
+      "package": "com.ryokf.omniflux",
+      "usesCleartextTraffic": true
     },
     "web": {
       "output": "static",
@@ -48,8 +49,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "b360ae48-ace2-47f7-a83b-a249106ca9e7"
+        "projectId": "812b65d0-7e0e-41a2-8bff-526bb5798f0c"
       }
-    }
+    },
+    "owner": "ryokf"
   }
 }
