@@ -7,6 +7,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter } from 'expo-router';
@@ -74,15 +75,20 @@ export default function LoginScreen() {
         {/* Logo / Brand */}
         <View className="items-center mb-12">
           <View
-            className="w-[72px] h-[72px] rounded-2xl bg-primary justify-center items-center mb-4"
             style={{
               shadowColor: Colors.primary,
               shadowOffset: { width: 0, height: 8 },
               shadowOpacity: 0.4,
               shadowRadius: 16,
+              elevation: 8,
             }}
+            className="mb-4"
           >
-            <Text className="text-[32px] text-white font-extrabold">O</Text>
+            <Image
+              source={require('../assets/logo.png')}
+              className="w-[72px] h-[72px] rounded-2xl"
+              resizeMode="cover"
+            />
           </View>
           <Text className="text-[28px] font-extrabold text-txt tracking-wide">
             OmniFlux
